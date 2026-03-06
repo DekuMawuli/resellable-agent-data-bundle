@@ -19,6 +19,8 @@ class Setting extends Model
         'whatsapp_number',
         'contact_number',
         'account_balance',
+        'maintenance_mode',
+        'maintenance_message',
     ];
 
     /**
@@ -31,6 +33,7 @@ class Setting extends Model
         return [
             'id' => 'integer',
             'account_balance' => 'decimal:2',
+            'maintenance_mode' => 'boolean',
         ];
     }
 }

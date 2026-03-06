@@ -19,6 +19,22 @@
                     <label for="site_name" class="form-label">Whatsapp Link</label>
                     <input type="text" class="form-control" wire:model='whatsapp_link' placeholder="Whatsapp Link">
                 </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label d-block">Maintenance Mode</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" wire:model="maintenance_mode" id="maintenanceModeSwitch">
+                        <label class="form-check-label" for="maintenanceModeSwitch">
+                            Enable system maintenance page
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Maintenance Message</label>
+                    <input type="text" class="form-control" wire:model='maintenance_message' placeholder="We are undergoing maintenance. Please check back shortly.">
+                    @error('maintenance_message')
+                        <span class="text-danger d-block mt-1">{{ $message }}</span>
+                    @enderror
+                </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
