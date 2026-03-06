@@ -1,0 +1,36 @@
+.mtn-card{
+    min-height: 10lvh;
+    width: 100%;
+    background-color: #ffcc25;
+    text-align: center;
+    font-weight: bolder;
+    padding-top: 2lvh;
+    border-radius: 1vh;
+    margin-bottom: 2vh;
+}
+
+.text-realest{
+    color: #F8E4AA;
+}
+
+.vodafone-card{
+    min-height: 10lvh;
+    width: 100%;
+    background-color: #ff2525;
+    text-align: center;
+    font-weight: bolder;
+    padding-top: 2lvh;
+    border-radius: 1vh;
+    margin-bottom: 2vh;
+}
+
+.airtel-tigo{
+    min-height: 10lvh;
+    width: 100%;
+    background: linear-gradient(to left, #ff0000, #1c3aff);
+    text-align: center;
+    font-weight: bolder;
+    padding-top: 2lvh;
+    border-radius: 1vh;
+    margin-bottom: 2vh;
+}
