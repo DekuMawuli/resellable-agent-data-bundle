@@ -330,13 +330,19 @@
                     </div>
                 @endif
                 <button type="button" class="btn btn-sm btn-outline-light"
-                    wire:click="lock" wire:loading.attr="disabled">
-                    <i class="fas fa-lock me-1"></i>Lock Now
+                    wire:click="lock" wire:loading.attr="disabled" wire:target="lock">
+                    <span wire:loading wire:target="lock" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <i class="fas fa-lock me-1" wire:loading.remove wire:target="lock"></i>
+                    <span wire:loading.remove wire:target="lock">Lock Now</span>
+                    <span wire:loading wire:target="lock">Locking...</span>
                 </button>
             @else
                 <button type="button" class="btn btn-warning btn-sm fw-semibold px-3"
-                    wire:click="openUnlockModal" wire:loading.attr="disabled">
-                    <i class="fas fa-unlock-alt me-2"></i>Unlock to Edit
+                    wire:click="openUnlockModal" wire:loading.attr="disabled" wire:target="openUnlockModal">
+                    <span wire:loading wire:target="openUnlockModal" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <i class="fas fa-unlock-alt me-2" wire:loading.remove wire:target="openUnlockModal"></i>
+                    <span wire:loading.remove wire:target="openUnlockModal">Unlock to Edit</span>
+                    <span wire:loading wire:target="openUnlockModal">Opening...</span>
                 </button>
             @endif
         </div>
@@ -453,6 +459,12 @@
 {{-- ══ UNLOCK MODAL ════════════════════════════════════════════════════════ --}}
 @if ($showUnlockModal)
 <div class="vault-modal-backdrop" wire:click.self="closeUnlockModal">
+    <div class="position-fixed top-0 start-50 translate-middle-x mt-4 d-none" wire:loading.flex wire:target="closeUnlockModal">
+        <div class="badge bg-dark-subtle text-dark border shadow-sm px-3 py-2">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Closing unlock dialog...
+        </div>
+    </div>
     <div class="vault-modal" role="dialog" aria-modal="true" aria-labelledby="unlockModalTitle">
         <div class="vault-modal__head">
             <div class="d-flex align-items-center gap-3">
@@ -464,7 +476,7 @@
                     <p class="vault-modal__sub mb-0">Vault will auto-lock after 15 minutes.</p>
                 </div>
             </div>
-            <button type="button" class="btn-close" wire:click="closeUnlockModal" aria-label="Close"></button>
+            <button type="button" class="btn-close" wire:click="closeUnlockModal" wire:loading.attr="disabled" wire:target="closeUnlockModal" aria-label="Close"></button>
         </div>
 
         <div class="vault-modal__body">
@@ -489,13 +501,18 @@
         </div>
 
         <div class="vault-modal__foot">
-            <button type="button" class="btn btn-sm btn-light" wire:click="closeUnlockModal">Cancel</button>
+            <button type="button" class="btn btn-sm btn-light" wire:click="closeUnlockModal" wire:loading.attr="disabled" wire:target="closeUnlockModal">
+                <span wire:loading wire:target="closeUnlockModal" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span wire:loading.remove wire:target="closeUnlockModal">Cancel</span>
+                <span wire:loading wire:target="closeUnlockModal">Closing...</span>
+            </button>
             <button type="button" class="btn btn-sm btn-warning fw-semibold px-4"
                 wire:click="unlock"
                 wire:loading.attr="disabled" wire:target="unlock">
                 <span wire:loading wire:target="unlock" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 <i class="fas fa-unlock-alt me-1" wire:loading.remove wire:target="unlock"></i>
-                Unlock
+                <span wire:loading.remove wire:target="unlock">Unlock</span>
+                <span wire:loading wire:target="unlock">Unlocking...</span>
             </button>
         </div>
     </div>
@@ -506,6 +523,12 @@
 {{-- ══ SAVE CONFIRM MODAL ══════════════════════════════════════════════════ --}}
 @if ($showSaveModal)
 <div class="vault-modal-backdrop" wire:click.self="closeSaveModal">
+    <div class="position-fixed top-0 start-50 translate-middle-x mt-4 d-none" wire:loading.flex wire:target="closeSaveModal">
+        <div class="badge bg-dark-subtle text-dark border shadow-sm px-3 py-2">
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            Closing save dialog...
+        </div>
+    </div>
     <div class="vault-modal" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle">
         <div class="vault-modal__head">
             <div class="d-flex align-items-center gap-3">
@@ -517,7 +540,7 @@
                     <p class="vault-modal__sub mb-0">This will overwrite the stored credentials.</p>
                 </div>
             </div>
-            <button type="button" class="btn-close" wire:click="closeSaveModal" aria-label="Close"></button>
+            <button type="button" class="btn-close" wire:click="closeSaveModal" wire:loading.attr="disabled" wire:target="closeSaveModal" aria-label="Close"></button>
         </div>
 
         <div class="vault-modal__body">
@@ -542,13 +565,18 @@
         </div>
 
         <div class="vault-modal__foot">
-            <button type="button" class="btn btn-sm btn-light" wire:click="closeSaveModal">Cancel</button>
+            <button type="button" class="btn btn-sm btn-light" wire:click="closeSaveModal" wire:loading.attr="disabled" wire:target="closeSaveModal">
+                <span wire:loading wire:target="closeSaveModal" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span wire:loading.remove wire:target="closeSaveModal">Cancel</span>
+                <span wire:loading wire:target="closeSaveModal">Closing...</span>
+            </button>
             <button type="button" class="btn btn-sm btn-danger fw-semibold px-4"
                 wire:click="confirmSave"
                 wire:loading.attr="disabled" wire:target="confirmSave">
                 <span wire:loading wire:target="confirmSave" class="spinner-border spinner-border-sm me-1" role="status"></span>
                 <i class="fas fa-save me-1" wire:loading.remove wire:target="confirmSave"></i>
-                Save & Lock
+                <span wire:loading.remove wire:target="confirmSave">Save & Lock</span>
+                <span wire:loading wire:target="confirmSave">Saving...</span>
             </button>
         </div>
     </div>

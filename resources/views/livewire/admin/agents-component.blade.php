@@ -5,9 +5,13 @@
                 <h4 class="card-title">All Agents</h4>
                 <div class="form-group">
                     <input type="text" wire:model.live="query" class="form-control" placeholder="Search Agent Name....">
+                    <div class="small text-muted mt-2 d-none align-items-center gap-2" wire:loading.flex wire:target="query">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Refreshing agents...
+                    </div>
                 </div>
                 @include("partials.alerts_inc")
-                <div class="table-responsive">
+                <div class="table-responsive" wire:loading.class="opacity-50" wire:target="query">
                 <table class="table table-striped table-inverse table-responsive-sm">
             <thead>
             <tr>
@@ -37,12 +41,26 @@
                                         type="button"
                                         wire:confirm.prompt="Are you sure?\n\nType YES to confirm|YES"
                                         wire:click="deleteAcc('{{ $agentCode }}')"
+                                        wire:loading.attr="disabled"
+                                        wire:target="deleteAcc('{{ $agentCode }}')"
                                         class="btn btn-danger btn-sm">
-                                   <i class="fas fa-trash-alt" aria-hidden="true"></i> Delete
+                                   <span wire:loading wire:target="deleteAcc('{{ $agentCode }}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                   <i class="fas fa-trash-alt" aria-hidden="true" wire:loading.remove wire:target="deleteAcc('{{ $agentCode }}')"></i>
+                                   <span wire:loading.remove wire:target="deleteAcc('{{ $agentCode }}')"> Delete</span>
+                                   <span wire:loading wire:target="deleteAcc('{{ $agentCode }}')">Deleting...</span>
                                 </button>
                                 @if($agent->agent_status != "active")
-                                    <button wire:click="activateAcc('{{ $agentCode }}')" class="btn btn-dark btn-sm">
-                                        <i class="fas fa-user-check" aria-hidden="true"></i> Activate Account
+                                    <button
+                                        type="button"
+                                        wire:click="activateAcc('{{ $agentCode }}')"
+                                        wire:loading.attr="disabled"
+                                        wire:target="activateAcc('{{ $agentCode }}')"
+                                        class="btn btn-dark btn-sm"
+                                    >
+                                        <span wire:loading wire:target="activateAcc('{{ $agentCode }}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                        <i class="fas fa-user-check" aria-hidden="true" wire:loading.remove wire:target="activateAcc('{{ $agentCode }}')"></i>
+                                        <span wire:loading.remove wire:target="activateAcc('{{ $agentCode }}')"> Activate Account</span>
+                                        <span wire:loading wire:target="activateAcc('{{ $agentCode }}')">Activating...</span>
                                     </button>
                                 @endif
                             @else
@@ -74,9 +92,23 @@
                     <div class="form-group">
                         <label for="">Amount</label>
                         <input type="number" step="0.01" wire:model.live="amount" class="form-control">
+                        <div class="small text-muted mt-2 d-none align-items-center gap-2" wire:loading.flex wire:target="amount">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Checking amount...
+                        </div>
                     </div>
                     <div class="form-group">
-                        <button wire:click="updateAgentWallet" class="btn btn-info">Load Wallet</button>
+                        <button
+                            type="button"
+                            wire:click="updateAgentWallet"
+                            wire:loading.attr="disabled"
+                            wire:target="updateAgentWallet"
+                            class="btn btn-info"
+                        >
+                            <span wire:loading wire:target="updateAgentWallet" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span wire:loading.remove wire:target="updateAgentWallet">Load Wallet</span>
+                            <span wire:loading wire:target="updateAgentWallet">Loading...</span>
+                        </button>
                     </div>
                 </div>
 

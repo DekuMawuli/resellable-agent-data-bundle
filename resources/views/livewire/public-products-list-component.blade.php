@@ -34,10 +34,15 @@
                     </select>
                 </div>
             </div>
+
+            <div class="mt-3 small text-muted d-none align-items-center gap-2" wire:loading.flex wire:target="search,categoryCode,stockFilter">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Refreshing bundles...
+            </div>
         </div>
     </div>
 
-    <div class="row">
+    <div class="row" wire:loading.class="opacity-50" wire:target="search,categoryCode,stockFilter">
         @forelse($products as $product)
             @php
                 $networkName = strtoupper($product->category->name ?? "NETWORK");

@@ -157,27 +157,29 @@
                                   <span class="catalog-panel__title">
                                       <i class="fas fa-satellite-dish me-1"></i>Realest Catalog
                                   </span>
-                                  <span class="catalog-panel__hint" wire:loading.remove wire:target="categoryId,setForEdit">
+                                  <span class="catalog-panel__hint" wire:loading.remove wire:target="categoryId,setForEdit,fillFromCatalog">
                                       tap a row to use
                                   </span>
-                                  <span class="catalog-panel__hint" wire:loading wire:target="categoryId,setForEdit"
+                                  <span class="catalog-panel__hint" wire:loading wire:target="categoryId,setForEdit,fillFromCatalog"
                                         style="color:#6366f1;font-weight:600;">
                                       loading…
                                   </span>
                               </div>
 
                               {{-- Animated progress bar while fetching --}}
-                              <div wire:loading wire:target="categoryId,setForEdit">
+                              <div wire:loading wire:target="categoryId,setForEdit,fillFromCatalog">
                                   <div class="catalog-loading-bar"></div>
                               </div>
 
-                              <div wire:loading.remove wire:target="categoryId,setForEdit">
+                              <div wire:loading.remove wire:target="categoryId,setForEdit,fillFromCatalog">
                                   @if ($catalogStatus === 'loaded' && count($catalogProducts))
                                       <div class="catalog-panel__body">
                                           @foreach ($catalogProducts as $item)
                                               <div
                                                   class="catalog-item {{ (string)$name === (string)$item['name'] ? 'is-selected' : '' }}"
                                                   wire:click="fillFromCatalog('{{ $item['name'] }}')"
+                                                  wire:loading.class="catalog-panel--loading"
+                                                  wire:target="fillFromCatalog('{{ $item['name'] }}')"
                                               >
                                                   <span class="catalog-item__size">{{ $item['name'] }} GB</span>
                                                   <span class="catalog-item__cost">GHS {{ number_format((float)$item['agent_price'], 2) }}</span>
@@ -259,12 +261,29 @@
                       @enderror
                   </div>
 
+                  <div class="small text-muted mt-2 mb-3 d-none align-items-center gap-2" wire:loading.flex wire:target="name,retailPrice,outOfStock">
+                      <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                      Syncing product form...
+                  </div>
+
                   <div class="form-group">
                       @if($updateMode)
-                          <button type="submit" class="btn btn-info btn-block">Update</button>
-                          <button type="button" wire:click="clearSelection" class="btn btn-dark btn-block">Clear</button>
+                          <button type="submit" class="btn btn-info btn-block" wire:loading.attr="disabled" wire:target="saveProduct">
+                              <span wire:loading wire:target="saveProduct" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              <span wire:loading.remove wire:target="saveProduct">Update</span>
+                              <span wire:loading wire:target="saveProduct">Updating...</span>
+                          </button>
+                          <button type="button" wire:click="clearSelection" wire:loading.attr="disabled" wire:target="clearSelection" class="btn btn-dark btn-block">
+                              <span wire:loading wire:target="clearSelection" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              <span wire:loading.remove wire:target="clearSelection">Clear</span>
+                              <span wire:loading wire:target="clearSelection">Clearing...</span>
+                          </button>
                       @else
-                          <button type="submit" class="btn btn-success btn-block">Save</button>
+                          <button type="submit" class="btn btn-success btn-block" wire:loading.attr="disabled" wire:target="saveProduct">
+                              <span wire:loading wire:target="saveProduct" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                              <span wire:loading.remove wire:target="saveProduct">Save</span>
+                              <span wire:loading wire:target="saveProduct">Saving...</span>
+                          </button>
                       @endif
                   </div>
 

@@ -29,8 +29,17 @@
 
                     @if($agent->agent_status !== 'active')
                         <div class="mt-3">
-                            <button wire:click="activateAcc" class="btn btn-success btn-sm">
-                                <i class="fas fa-user-check" aria-hidden="true"></i> Activate Account
+                            <button
+                                type="button"
+                                wire:click="activateAcc"
+                                wire:loading.attr="disabled"
+                                wire:target="activateAcc"
+                                class="btn btn-success btn-sm"
+                            >
+                                <span wire:loading wire:target="activateAcc" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <i class="fas fa-user-check" aria-hidden="true" wire:loading.remove wire:target="activateAcc"></i>
+                                <span wire:loading.remove wire:target="activateAcc"> Activate Account</span>
+                                <span wire:loading wire:target="activateAcc">Activating...</span>
                             </button>
                         </div>
                     @endif
@@ -73,9 +82,22 @@
                         <div class="col-12 col-md-4">
                             <label class="form-label">Amount (GHS)</label>
                             <input type="number" step="0.01" wire:model.live="amount" class="form-control" placeholder="Enter amount">
+                            <div class="small text-muted mt-2 d-none align-items-center gap-2" wire:loading.flex wire:target="amount">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Checking amount...
+                            </div>
                         </div>
                         <div class="col-12 col-md-2">
-                            <button type="submit" class="btn btn-success w-100">Top Up</button>
+                            <button
+                                type="submit"
+                                class="btn btn-success w-100"
+                                wire:loading.attr="disabled"
+                                wire:target="topUp"
+                            >
+                                <span wire:loading wire:target="topUp" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span wire:loading.remove wire:target="topUp">Top Up</span>
+                                <span wire:loading wire:target="topUp">Loading...</span>
+                            </button>
                         </div>
                     </form>
                 </div>

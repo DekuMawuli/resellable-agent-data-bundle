@@ -36,10 +36,15 @@
                     </select>
                 </div>
             </div>
+
+            <div class="mt-3 small text-muted d-none align-items-center gap-2" wire:loading.flex wire:target="search,categoryId,stockFilter">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Refreshing available packages...
+            </div>
         </div>
     </div>
 
-    <div class="row g-3">
+    <div class="row g-3" wire:loading.class="opacity-50" wire:target="search,categoryId,stockFilter">
         @forelse($allProducts as $product)
             @php
                 $networkName = strtoupper($product->category->name ?? "NETWORK");
@@ -71,8 +76,17 @@
                             </div>
 
                             @if(!$product->out_to_stock)
-                                <button type="button" wire:click="startPurchase('{{ $product->code }}')" class="btn shop-buy-btn">
-                                    <i class="fas fa-shopping-cart me-1" aria-hidden="true"></i> Buy Now
+                                <button
+                                    type="button"
+                                    wire:click="startPurchase('{{ $product->code }}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="startPurchase('{{ $product->code }}')"
+                                    class="btn shop-buy-btn"
+                                >
+                                    <span wire:loading wire:target="startPurchase('{{ $product->code }}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <i class="fas fa-shopping-cart me-1" aria-hidden="true" wire:loading.remove wire:target="startPurchase('{{ $product->code }}')"></i>
+                                    <span wire:loading.remove wire:target="startPurchase('{{ $product->code }}')">Buy Now</span>
+                                    <span wire:loading wire:target="startPurchase('{{ $product->code }}')">Opening...</span>
                                 </button>
                             @else
                                 <span class="shop-stock-badge">Out of Stock</span>
@@ -99,7 +113,15 @@
             <div class="modal-content shop-wizard-modal-content">
                 <div class="modal-header border-0 pb-2">
                     <h5 class="modal-title" id="purchaseWizardModalLabel">Purchase Wizard</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" wire:click="backToBrowse"></button>
+                    <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                        wire:click="backToBrowse"
+                        wire:loading.attr="disabled"
+                        wire:target="backToBrowse"
+                    ></button>
                 </div>
                 <div class="modal-body pt-0">
                     <div class="shop-wizard-steps mb-3">
@@ -125,14 +147,38 @@
                                 wire:model.live.debounce.300ms="recipientPhone"
                                 placeholder="e.g. 0551234567"
                             >
+                            <div class="small text-muted mt-2 d-none align-items-center gap-2" wire:loading.flex wire:target="recipientPhone">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Validating recipient...
+                            </div>
                             @error("recipientPhone")
                                 <small class="text-danger d-block mt-1">{{ $message }}</small>
                             @enderror
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-secondary" wire:click="backToBrowse">Cancel</button>
-                            <button type="button" class="btn shop-buy-btn ms-auto" wire:click="proceedToConfirm">Continue</button>
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                wire:click="backToBrowse"
+                                wire:loading.attr="disabled"
+                                wire:target="backToBrowse"
+                            >
+                                <span wire:loading wire:target="backToBrowse" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span wire:loading.remove wire:target="backToBrowse">Cancel</span>
+                                <span wire:loading wire:target="backToBrowse">Closing...</span>
+                            </button>
+                            <button
+                                type="button"
+                                class="btn shop-buy-btn ms-auto"
+                                wire:click="proceedToConfirm"
+                                wire:loading.attr="disabled"
+                                wire:target="proceedToConfirm"
+                            >
+                                <span wire:loading wire:target="proceedToConfirm" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span wire:loading.remove wire:target="proceedToConfirm">Continue</span>
+                                <span wire:loading wire:target="proceedToConfirm">Continuing...</span>
+                            </button>
                         </div>
                     @endif
 
@@ -148,10 +194,19 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-secondary" wire:click="$set('wizardStep','recipient')" wire:loading.attr="disabled" wire:target="submitPurchase">Back</button>
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                wire:click="$set('wizardStep','recipient')"
+                                wire:loading.attr="disabled"
+                            >
+                                <span wire:loading class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                Back
+                            </button>
                             <button type="button" class="btn shop-buy-btn ms-auto" wire:click="submitPurchase" wire:loading.attr="disabled" wire:target="submitPurchase">
                                 <span wire:loading wire:target="submitPurchase" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                                Confirm Purchase
+                                <span wire:loading.remove wire:target="submitPurchase">Confirm Purchase</span>
+                                <span wire:loading wire:target="submitPurchase">Submitting...</span>
                             </button>
                         </div>
                     @endif
@@ -165,7 +220,17 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-outline-secondary" wire:click="backToBrowse">Close</button>
+                            <button
+                                type="button"
+                                class="btn btn-outline-secondary"
+                                wire:click="backToBrowse"
+                                wire:loading.attr="disabled"
+                                wire:target="backToBrowse"
+                            >
+                                <span wire:loading wire:target="backToBrowse" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                <span wire:loading.remove wire:target="backToBrowse">Close</span>
+                                <span wire:loading wire:target="backToBrowse">Closing...</span>
+                            </button>
                             <a href="{{ route("agent.orders") }}" class="btn shop-buy-btn ms-auto">View Orders</a>
                         </div>
                     @endif

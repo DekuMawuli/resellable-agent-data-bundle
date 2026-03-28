@@ -31,8 +31,16 @@
               <td><span class="badge bg-{{ $statusClass }}">{{ ucfirst((string) $order->status) }}</span></td>
               <td>
                 @if(!in_array(strtolower((string) $order->status), ["completed", "success"], true))
-                  <button class="btn btn-outline-info btn-sm" wire:click="checkStatus('{{ $order->code }}')">
-                    Check Status
+                  <button
+                    type="button"
+                    class="btn btn-outline-info btn-sm"
+                    wire:click="checkStatus('{{ $order->code }}')"
+                    wire:loading.attr="disabled"
+                    wire:target="checkStatus('{{ $order->code }}')"
+                  >
+                    <span wire:loading wire:target="checkStatus('{{ $order->code }}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span wire:loading.remove wire:target="checkStatus('{{ $order->code }}')">Check Status</span>
+                    <span wire:loading wire:target="checkStatus('{{ $order->code }}')">Checking...</span>
                   </button>
                 @endif
               </td>

@@ -7,15 +7,27 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <label for="topup-range-{{ $this->getId() }}" class="mb-0 text-muted small">Range</label>
-                <select id="topup-range-{{ $this->getId() }}" wire:model.change="range" class="form-select form-select-sm" style="min-width: 120px;">
+                <select id="topup-range-{{ $this->getId() }}" wire:model.change="range" wire:loading.attr="disabled" wire:target="range" class="form-select form-select-sm" style="min-width: 120px;">
                     @foreach($rangeOptions as $days)
                         <option value="{{ $days }}">Last {{ $days }} days</option>
                     @endforeach
                 </select>
+                <span class="small text-muted d-none align-items-center gap-2" wire:loading.flex wire:target="range">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    Updating...
+                </span>
             </div>
         </div>
 
-        <div wire:ignore id="admin-topups-chart-{{ $this->getId() }}" style="min-height: 290px;"></div>
+        <div class="position-relative" wire:loading.class="opacity-50" wire:target="range">
+            <div class="position-absolute top-0 start-50 translate-middle-x mt-2 d-none" wire:loading.flex wire:target="range" style="z-index: 1;">
+                <div class="badge bg-light text-dark border shadow-sm px-3 py-2">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Refreshing chart...
+                </div>
+            </div>
+            <div wire:ignore id="admin-topups-chart-{{ $this->getId() }}" style="min-height: 290px;"></div>
+        </div>
     </div>
 
     @script

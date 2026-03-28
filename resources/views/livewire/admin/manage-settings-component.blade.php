@@ -49,7 +49,16 @@
                     @enderror
                 </div>
                 <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                        wire:loading.attr="disabled"
+                        wire:target="saveRecord"
+                    >
+                        <span wire:loading wire:target="saveRecord" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span wire:loading.remove wire:target="saveRecord">Save Changes</span>
+                        <span wire:loading wire:target="saveRecord">Saving...</span>
+                    </button>
                 </div>
             </form>
         </div>

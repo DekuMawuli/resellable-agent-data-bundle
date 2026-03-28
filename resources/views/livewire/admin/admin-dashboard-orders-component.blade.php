@@ -22,9 +22,29 @@
                     <td>
                         <div class="action-group">
                             @if($order->status == "pending")
-                                <button wire:click="confirmPurchase('{{$order->code}}')" class="btn btn-info btn-sm">Confirm Payment</button>
+                                <button
+                                    type="button"
+                                    wire:click="confirmPurchase('{{$order->code}}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="confirmPurchase('{{$order->code}}')"
+                                    class="btn btn-info btn-sm"
+                                >
+                                    <span wire:loading wire:target="confirmPurchase('{{$order->code}}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <span wire:loading.remove wire:target="confirmPurchase('{{$order->code}}')">Confirm Payment</span>
+                                    <span wire:loading wire:target="confirmPurchase('{{$order->code}}')">Confirming...</span>
+                                </button>
                             @elseif($order->status == "processing" && blank($order->provider_reference))
-                                <button wire:click="approvePurchase('{{$order->code}}')" class="btn btn-success btn-sm">Forward Order</button>
+                                <button
+                                    type="button"
+                                    wire:click="approvePurchase('{{$order->code}}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="approvePurchase('{{$order->code}}')"
+                                    class="btn btn-success btn-sm"
+                                >
+                                    <span wire:loading wire:target="approvePurchase('{{$order->code}}')" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <span wire:loading.remove wire:target="approvePurchase('{{$order->code}}')">Forward Order</span>
+                                    <span wire:loading wire:target="approvePurchase('{{$order->code}}')">Forwarding...</span>
+                                </button>
                             @elseif($order->status == "processing")
                                 <span class="badge badge-primary">Forwarded</span>
                             @else

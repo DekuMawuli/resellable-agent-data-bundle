@@ -36,7 +36,16 @@
                     </div>
 
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                            wire:loading.attr="disabled"
+                            wire:target="updateProfile"
+                        >
+                            <span wire:loading wire:target="updateProfile" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span wire:loading.remove wire:target="updateProfile">Update Profile</span>
+                            <span wire:loading wire:target="updateProfile">Updating...</span>
+                        </button>
                     </div>
                 </form>
             </div>
@@ -66,7 +75,16 @@
                     </div>
 
                     <div class="col-12">
-                        <button type="submit" class="btn btn-warning">Change Password</button>
+                        <button
+                            type="submit"
+                            class="btn btn-warning"
+                            wire:loading.attr="disabled"
+                            wire:target="changePassword"
+                        >
+                            <span wire:loading wire:target="changePassword" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            <span wire:loading.remove wire:target="changePassword">Change Password</span>
+                            <span wire:loading wire:target="changePassword">Updating...</span>
+                        </button>
                     </div>
                 </form>
             </div>

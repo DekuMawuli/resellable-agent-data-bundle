@@ -3,7 +3,17 @@
     <div class="card-body">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <h4 class="card-title mb-0">Orders</h4>
-        <button class="btn btn-outline-secondary btn-sm" wire:click="clearFilters">Reset Filters</button>
+        <button
+          type="button"
+          class="btn btn-outline-secondary btn-sm"
+          wire:click="clearFilters"
+          wire:loading.attr="disabled"
+          wire:target="clearFilters"
+        >
+          <span wire:loading wire:target="clearFilters" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+          <span wire:loading.remove wire:target="clearFilters">Reset Filters</span>
+          <span wire:loading wire:target="clearFilters">Resetting...</span>
+        </button>
       </div>
 
       @include("partials.alerts_inc")
@@ -59,7 +69,12 @@
         </div>
       </div>
 
-      <div class="table-responsive">
+      <div class="mb-3 small text-muted d-none align-items-center gap-2" wire:loading.flex wire:target="search,status,payment,agentId,categoryId,dateFrom,dateTo,clearFilters">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Refreshing orders...
+      </div>
+
+      <div class="table-responsive" wire:loading.class="opacity-50" wire:target="search,status,payment,agentId,categoryId,dateFrom,dateTo,clearFilters">
         <table class="table table-striped table-hover align-middle mb-0">
           <thead>
             <tr>
@@ -110,9 +125,11 @@
                         class="btn btn-info btn-sm"
                         wire:click="confirmPurchase({{ $order->id }})"
                         wire:loading.attr="disabled"
-                        wire:target="confirmPurchase"
+                        wire:target="confirmPurchase({{ $order->id }})"
                       >
-                        Confirm
+                        <span wire:loading wire:target="confirmPurchase({{ $order->id }})" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span wire:loading.remove wire:target="confirmPurchase({{ $order->id }})">Confirm</span>
+                        <span wire:loading wire:target="confirmPurchase({{ $order->id }})">Confirming...</span>
                       </button>
                     @elseif($displayStatus === "processing" && blank($order->provider_reference))
                       <button
@@ -120,9 +137,11 @@
                         class="btn btn-success btn-sm"
                         wire:click="approvePurchase({{ $order->id }})"
                         wire:loading.attr="disabled"
-                        wire:target="approvePurchase"
+                        wire:target="approvePurchase({{ $order->id }})"
                       >
-                        Approve
+                        <span wire:loading wire:target="approvePurchase({{ $order->id }})" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        <span wire:loading.remove wire:target="approvePurchase({{ $order->id }})">Approve</span>
+                        <span wire:loading wire:target="approvePurchase({{ $order->id }})">Approving...</span>
                       </button>
                     @elseif($displayStatus === "processing")
                       <span class="text-muted">Forwarded</span>
