@@ -31,9 +31,11 @@ class PagesController extends Controller
                 "account_balance" => 0.00
             ]
         );
-        $recentOrders = Order::with(["product", "product.category"])
-            ->take(15)
-            ->orderBy('created_at', 'desc')
+        $recentOrders = Order::query()
+            ->with(["product", "product.category"])
+            ->whereIn("status", ["completed", "success"])
+            ->orderByDesc("created_at")
+            ->take(10)
             ->get();
         $allProducts = Product::query()
             ->with(["category"])

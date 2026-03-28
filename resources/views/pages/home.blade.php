@@ -39,7 +39,7 @@
           }
 
           .hero-brand-badge img {
-            height: 20px;`
+            height: 20px;
             width: auto;
           }
 
@@ -47,6 +47,152 @@
             height: 28px;
             width: auto;
             margin-bottom: 12px;
+          }
+
+          .recent-orders-marquee {
+            position: relative;
+            overflow: hidden;
+            padding: 10px 0;
+            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+          }
+
+          .recent-orders-marquee::before,
+          .recent-orders-marquee::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 72px;
+            z-index: 2;
+            pointer-events: none;
+          }
+
+          .recent-orders-marquee::before {
+            left: 0;
+            background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+          }
+
+          .recent-orders-marquee::after {
+            right: 0;
+            background: linear-gradient(270deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
+          }
+
+          .recent-orders-track {
+            display: flex;
+            align-items: stretch;
+            gap: 18px;
+            width: max-content;
+            flex-wrap: nowrap;
+            animation: recentOrdersTicker 34s linear infinite;
+            will-change: transform;
+          }
+
+          .recent-orders-marquee:hover .recent-orders-track {
+            animation-play-state: paused;
+          }
+
+          .recent-orders-slide {
+            flex: 0 0 310px;
+            width: 310px;
+          }
+
+          .recent-orders-card {
+            min-height: 100%;
+            background: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            border-radius: 18px;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+            padding: 14px;
+          }
+
+          .recent-orders-card .public-product-body {
+            padding: 0;
+          }
+
+          .recent-orders-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #0f376d;
+            margin-bottom: 10px;
+          }
+
+          .recent-orders-kicker__dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 999px;
+            background: #10b981;
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.12);
+            animation: recentOrdersPulse 1.8s ease-in-out infinite;
+          }
+
+          .recent-orders-card .public-network-chip {
+            margin-bottom: 16px;
+          }
+
+          .recent-orders-time {
+            margin-top: 8px;
+            display: block;
+            font-size: 0.92rem;
+            color: #6b7a90;
+          }
+
+          @keyframes recentOrdersTicker {
+            from {
+              transform: translate3d(0, 0, 0);
+            }
+            to {
+              transform: translate3d(calc(-50% - 9px), 0, 0);
+            }
+          }
+
+          @keyframes recentOrdersPulse {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 1;
+            }
+            50% {
+              transform: scale(0.72);
+              opacity: 0.45;
+            }
+          }
+
+          @media (max-width: 991.98px) {
+            .recent-orders-track {
+              animation-duration: 28s;
+            }
+
+            .recent-orders-slide {
+              flex-basis: 280px;
+              width: 280px;
+            }
+          }
+
+          @media (max-width: 575.98px) {
+            .recent-orders-marquee {
+              mask-image: none;
+              -webkit-mask-image: none;
+            }
+
+            .recent-orders-marquee::before,
+            .recent-orders-marquee::after {
+              display: none;
+            }
+
+            .recent-orders-track {
+              gap: 14px;
+              animation-duration: 24s;
+            }
+
+            .recent-orders-slide {
+              flex-basis: 250px;
+              width: 250px;
+            }
           }
         </style>
         @include("partials.network_product_cards_styles")
@@ -260,36 +406,50 @@
               <div class="section-header text-center mb-5">
                 <span class="section-heading primary-color">Recent Orders</span>
               </div>
-              <div class="row justify-content-center">
-                @foreach($recentOrders as $order)
-                  @php
-                    $recentNetwork = strtoupper($order->product->category->name ?? "NETWORK");
-                    $recentNetworkClass = "is-default";
-                    if (in_array($recentNetwork, ["MTN", "YELLO"])) {
-                        $recentNetworkClass = "is-mtn";
-                    } elseif (in_array($recentNetwork, ["VODAFONE", "TELECEL"])) {
-                        $recentNetworkClass = "is-telecel";
-                    } elseif (in_array($recentNetwork, ["AT_PREMIUM", "AIRTELTIGO", "AT_BIGTIME"])) {
-                        $recentNetworkClass = "is-at";
-                    }
-                  @endphp
-                  <div
-                    class="col-lg-4 col-md-6 col-12 mb-4"
-                    data-aos="fade-up"
-                    data-aos-duration="700"
-                  >
-                    <div class="public-product-card">
-                      <div class="public-network-chip {{ $recentNetworkClass }}">{{ $recentNetwork }}</div>
-                      <div class="public-product-body">
-                        <h5 class="public-product-title mb-1">{{ $order->product->name }} GB delivered</h5>
-                        <p class="public-product-subtitle mb-0">
-                          Completed {{ $order->updated_at->diffForHumans() }}
-                        </p>
-                      </div>
-                    </div>
+              @if($recentOrders->isNotEmpty())
+                @php
+                  $recentOrdersLoop = $recentOrders->concat($recentOrders);
+                @endphp
+                <div class="recent-orders-marquee" aria-label="Live recent orders feed">
+                  <div class="recent-orders-track">
+                    @foreach($recentOrdersLoop as $order)
+                      @php
+                        $recentNetwork = strtoupper($order->product->category->name ?? "NETWORK");
+                        $recentNetworkClass = "is-default";
+                        if (in_array($recentNetwork, ["MTN", "YELLO"])) {
+                            $recentNetworkClass = "is-mtn";
+                        } elseif (in_array($recentNetwork, ["VODAFONE", "TELECEL"])) {
+                            $recentNetworkClass = "is-telecel";
+                        } elseif (in_array($recentNetwork, ["AT_PREMIUM", "AIRTELTIGO", "AT_BIGTIME"])) {
+                            $recentNetworkClass = "is-at";
+                        }
+                      @endphp
+                      <article class="recent-orders-slide" @if($loop->index >= $recentOrders->count()) aria-hidden="true" @endif>
+                        <div class="recent-orders-card">
+                          <div class="recent-orders-kicker">
+                            <span class="recent-orders-kicker__dot"></span>
+                            Live order feed
+                          </div>
+                          <div class="public-network-chip {{ $recentNetworkClass }}">{{ $recentNetwork }}</div>
+                          <div class="public-product-body">
+                            <h5 class="public-product-title mb-1">{{ $order->product->name }} GB delivered</h5>
+                            <p class="public-product-subtitle mb-0">
+                              Order ref: {{ strtoupper(\Illuminate\Support\Str::limit((string) $order->code, 10, '')) }}
+                            </p>
+                            <span class="recent-orders-time">
+                              Completed {{ $order->updated_at?->diffForHumans() }}
+                            </span>
+                          </div>
+                        </div>
+                      </article>
+                    @endforeach
                   </div>
-                @endforeach
-              </div>
+                </div>
+              @else
+                <div class="text-center text-muted">
+                  No completed orders yet.
+                </div>
+              @endif
             </div>
           </div>
         </div>
