@@ -9,14 +9,14 @@ use Livewire\Component;
 
 class AdminSalesChartComponent extends Component
 {
-    public int $range = 1;
+    public int $range = 3;
 
-    public array $rangeOptions = [1, 7, 30, 90];
+    public array $rangeOptions = [3, 7, 30, 90];
 
     public function mount(): void
     {
         $this->range = (int) $this->range;
-        $this->range = in_array($this->range, $this->rangeOptions, true) ? $this->range : 1;
+        $this->range = in_array($this->range, $this->rangeOptions, true) ? $this->range : 3;
     }
 
     public function updatedRange(): void
@@ -24,7 +24,7 @@ class AdminSalesChartComponent extends Component
         $this->range = (int) $this->range;
 
         if (! in_array($this->range, $this->rangeOptions, true)) {
-            $this->range = 1;
+            $this->range = 3;
         }
 
         $this->dispatch("admin-sales-chart-updated", chart: $this->buildChartPayload())->self();

@@ -9,7 +9,7 @@
                 <label for="topup-range-{{ $this->getId() }}" class="mb-0 text-muted small">Range</label>
                 <select id="topup-range-{{ $this->getId() }}" wire:model.change="range" class="form-select form-select-sm" style="min-width: 120px;">
                     @foreach($rangeOptions as $days)
-                        <option value="{{ $days }}">{{ $days === 1 ? "Today" : "Last {$days} days" }}</option>
+                        <option value="{{ $days }}">Last {{ $days }} days</option>
                     @endforeach
                 </select>
             </div>
