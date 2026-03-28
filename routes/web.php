@@ -43,7 +43,6 @@ Route::prefix("/root")
         Route::get("", "dashboard")->name("dashboard");
         Route::get("/categories", "categories")->name("categories");
         Route::get("/products", "products")->name("products");
-        Route::get("/view-tigo-balance", "checkBalance")->name("tigo-balance");
         Route::get("/orders", "orders")->name("orders");
         Route::post("/toggle-balance", "toggleBalanceView")->name("view-balance");
         Route::get("/delete-order/{code}", "deleteOrder")->name("deleteOrder");

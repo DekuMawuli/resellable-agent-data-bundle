@@ -5,26 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\TopUp;
-use App\Models\Product;
 use App\Models\Setting;
-use App\Models\SmsTracker;
-use App\Models\Transaction;
 use App\Services\RealestApiService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
 
 
-    public function dashboard(){
-
-        // $response = $this->checkBalance();
-
-
+    public function dashboard()
+    {
         $agents = User::query()
             ->where("role", "agent")
             ->where("agent_status", "active")
@@ -57,10 +50,10 @@ class AdminController extends Controller
         $ctx = [
             "activeAgents" => $agents,
             "todaySales" => $todaySales,
-            "balance" => 0,
+            "balance" => $setting->account_balance,
             "deposits" => $deposits,
             "totalDeposits" => $totalDeposit,
-            "setting" => $setting
+            "setting" => $setting,
         ];
         return view("admin.dashboard", $ctx);
     }
@@ -229,41 +222,6 @@ class AdminController extends Controller
 
         return view("admin.agent_detail");
     }
-
-
-    private function checkBalance()
-    {
-        // Base URL
-        $baseUrl = 'https://datummarket.com/ishare_api/balance';
-
-        // API and secret keys
-        $tigoKey = config('services.tigo.key');
-        $tigoSecret = config('services.tigo.secret');
-
-        // Data to be sent in the body
-        $data = [
-            'name' => 'Azumah Nbalino',
-        ];
-
-        // Make the POST request using Laravel Http client
-        $response = Http::withHeaders([
-            'X-Api-Key' => $tigoKey,
-            'X-Secret-Key' => $tigoSecret,
-            'Content-Type' => 'application/json',
-        ])
-            ->withoutVerifying() // Equivalent to CURLOPT_SSL_VERIFYPEER = false
-            ->post($baseUrl, $data);
-
-        // Check if the request was successful
-        if ($response->failed()) {
-            throw new \Exception('API request failed: ' . $response->body());
-        }
-
-        // Return the decoded JSON response
-        return $response->json();
-    }
-
-
 
     public function settings()
     {

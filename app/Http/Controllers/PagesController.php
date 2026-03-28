@@ -127,7 +127,7 @@ class PagesController extends Controller
             "code" => Str::uuid()
         ]);
 
-        CustomHelper::message("primary",  "<b>Success</b><br/>Your account has been created successfully.Kindly Login, Top-up and start buying the Gee deals");
+        CustomHelper::message("primary", "Your account has been created successfully. Kindly log in, top up, and start buying.");
         // CustomHelper::sendSms($newUser);
         return redirect(route("pages.login"));
     }

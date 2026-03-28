@@ -8,17 +8,6 @@ use Illuminate\Support\Facades\Http;
 
 class RealestApiService
 {
-    public function checkBalance(): array
-    {
-        if (!$this->isConfigured()) {
-            return $this->missingConfigurationResponse();
-        }
-
-        $response = $this->apiClient()->get("/check-balance");
-
-        return $this->formatResponse($response);
-    }
-
     public function purchaseBundle(string $network, string $recipient, string $size): array
     {
         if (!$this->isConfigured()) {
@@ -72,6 +61,10 @@ class RealestApiService
         $payload = $response->json();
 
         if (is_array($payload)) {
+            if (isset($payload["message"]) && is_string($payload["message"])) {
+                $payload["message"] = $this->safeUserFacingMessage($payload["message"]);
+            }
+
             return $payload;
         }
 
@@ -84,7 +77,35 @@ class RealestApiService
 
         return [
             "status" => "error",
-            "message" => $response->body() ?: "Unexpected response from Realest API.",
+            "message" => $this->safeUserFacingMessage($response->body()),
         ];
+    }
+
+    /**
+     * Never surface raw HTML (e.g. provider 404 pages) to flash messages or the UI.
+     */
+    private function safeUserFacingMessage(?string $text): string
+    {
+        $fallback = "Unexpected response from the provider API. Check configuration or try again.";
+        if ($text === null || $text === "") {
+            return $fallback;
+        }
+        $trimmed = trim($text);
+        if ($trimmed === "") {
+            return $fallback;
+        }
+        $lower = strtolower($trimmed);
+        if (
+            str_starts_with($trimmed, "<")
+            || str_contains($lower, "<!doctype")
+            || str_contains($lower, "<html")
+        ) {
+            return $fallback;
+        }
+        if (strlen($trimmed) > 280) {
+            return $fallback;
+        }
+
+        return $trimmed;
     }
 }

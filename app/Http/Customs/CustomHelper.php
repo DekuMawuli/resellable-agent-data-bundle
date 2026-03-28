@@ -7,9 +7,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class CustomHelper{
-    public static function message($at, $am){
+    public static function message($at, $am): void
+    {
+        $text = is_string($am) ? trim(strip_tags($am)) : (string) $am;
+        if (strlen($text) > 500) {
+            $text = substr($text, 0, 497) . "...";
+        }
         session()->flash("at", $at);
-        session()->flash("am", $am);
+        session()->flash("am", $text);
     }
 
     public static function extractDigits($string)
