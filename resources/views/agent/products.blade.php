@@ -24,6 +24,7 @@
     </div>
 
     @include("partials.alerts_inc")
+    @include("partials.test_mode_notice", ["noticeContext" => "agent_purchase"])
 
     @livewire("agent-products-component")
 

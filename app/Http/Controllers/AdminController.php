@@ -158,6 +158,25 @@ class AdminController extends Controller
             return redirect(route("root.dashboard"));
         }
 
+        $useLive = (bool) Setting::query()->value("use_live_payment");
+
+        // ── TEST MODE: approve locally, never touch the external API ──────────
+        if (!$useLive) {
+            $order->provider_reference = "TEST-" . strtoupper(substr(uniqid(), -8));
+            $order->provider_status    = "completed";
+            $order->status             = "completed";
+            $order->save();
+
+            Log::channel("realest")->info("Order approved locally in test mode (no API call made)", [
+                "order_code"        => $order->code,
+                "provider_reference" => $order->provider_reference,
+            ]);
+
+            CustomHelper::message("info", "Test mode — order marked as completed locally. No request was sent to the provider.");
+            return redirect(route("root.dashboard"));
+        }
+
+        // ── LIVE MODE: forward to Realest API ─────────────────────────────────
         try {
             $response = app(RealestApiService::class)->purchaseBundle(
                 strtoupper($order->product->category->name),
@@ -173,20 +192,20 @@ class AdminController extends Controller
             $responseData = $response["data"] ?? [];
 
             $order->provider_reference = (string) ($responseData["reference_code"] ?? $order->provider_reference);
-            $order->provider_status = (string) ($responseData["order_status"] ?? "processing");
-            $order->status = match (strtolower(trim($order->provider_status))) {
-                "success", "completed" => "completed",
+            $order->provider_status    = (string) ($responseData["order_status"] ?? "processing");
+            $order->status             = match (strtolower(trim($order->provider_status))) {
+                "success", "completed"                        => "completed",
                 "pending", "processing", "queued", "ongoing" => "processing",
-                "failed", "error", "cancelled", "reversed" => "failed",
-                default => "processing",
+                "failed", "error", "cancelled", "reversed"   => "failed",
+                default                                       => "processing",
             };
             $order->save();
 
-            CustomHelper::message("success", "Order forwarded successfully.");
+            CustomHelper::message("success", "Order forwarded to provider successfully.");
         } catch (\Throwable $e) {
             Log::channel("realest")->error("Realest API exception during admin approvePurchase", [
                 "order_code" => $order->code,
-                "message" => $e->getMessage(),
+                "message"    => $e->getMessage(),
             ]);
             CustomHelper::message("danger", "An unexpected error occurred while forwarding the order.");
         }

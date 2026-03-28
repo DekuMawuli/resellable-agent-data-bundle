@@ -15,6 +15,8 @@
       </ol>
     </nav>
 
+    @include("partials.test_mode_notice", ["noticeContext" => "admin_order"])
+
     @livewire("admin.orders-component")
 
   </div>

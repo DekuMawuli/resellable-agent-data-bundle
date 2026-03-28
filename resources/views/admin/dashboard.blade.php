@@ -18,6 +18,7 @@
         </div>
 
         @include("partials.alerts_inc")
+        @include("partials.test_mode_notice", ["noticeContext" => "admin_order"])
         @include("partials.admin.realest_config_notice")
 
         <div class="row g-3 mb-3">

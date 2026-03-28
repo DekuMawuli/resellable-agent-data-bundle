@@ -137,6 +137,7 @@
                     @endif
 
                     @if($wizardStep === "confirm" && $selectedProduct)
+                        @include("partials.test_mode_notice", ["noticeContext" => "agent_purchase"])
                         <div class="shop-wizard-panel mb-3">
                             <p class="mb-1 text-muted">Recipient</p>
                             <h6 class="mb-0">{{ $recipientPhone }}</h6>

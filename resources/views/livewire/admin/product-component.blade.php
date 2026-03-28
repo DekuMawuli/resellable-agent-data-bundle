@@ -303,15 +303,44 @@
                         </td>
                         <td>
                             <div class="action-group">
-                            <button wire:click="setForEdit('{{ $product->code }}')" class="btn btn-info btn-sm">
-                                <i class="fas fa-pen" aria-hidden="true"></i>
-                            </button>
-                             <button wire:click="deleteProduct('{{ $product->code }}')" class="btn btn-danger btn-sm">
-                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
-                            </button>
-                            <button wire:click="toggleStockStatus('{{ $product->code }}')" class="btn btn-warning btn-sm">
-                                <i class="fas fa-store" aria-hidden="true"></i> Toggle Stock
-                            </button>
+                                {{-- Edit --}}
+                                <button
+                                    wire:click="setForEdit('{{ $product->code }}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="setForEdit,deleteProduct,toggleStockStatus"
+                                    class="btn btn-info btn-sm">
+                                    <span wire:loading wire:target="setForEdit('{{ $product->code }}')"
+                                          class="spinner-border spinner-border-sm" role="status"></span>
+                                    <i class="fas fa-pen"
+                                       wire:loading.remove wire:target="setForEdit('{{ $product->code }}')"></i>
+                                </button>
+
+                                {{-- Delete --}}
+                                <button
+                                    wire:click="deleteProduct('{{ $product->code }}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="setForEdit,deleteProduct,toggleStockStatus"
+                                    class="btn btn-danger btn-sm">
+                                    <span wire:loading wire:target="deleteProduct('{{ $product->code }}')"
+                                          class="spinner-border spinner-border-sm" role="status"></span>
+                                    <i class="fas fa-trash-alt"
+                                       wire:loading.remove wire:target="deleteProduct('{{ $product->code }}')"></i>
+                                </button>
+
+                                {{-- Toggle Stock --}}
+                                <button
+                                    wire:click="toggleStockStatus('{{ $product->code }}')"
+                                    wire:loading.attr="disabled"
+                                    wire:target="setForEdit,deleteProduct,toggleStockStatus"
+                                    class="btn btn-warning btn-sm">
+                                    <span wire:loading wire:target="toggleStockStatus('{{ $product->code }}')"
+                                          class="spinner-border spinner-border-sm" role="status"></span>
+                                    <i class="fas fa-store"
+                                       wire:loading.remove wire:target="toggleStockStatus('{{ $product->code }}')"></i>
+                                    <span wire:loading.remove wire:target="toggleStockStatus('{{ $product->code }}')">
+                                        Toggle Stock
+                                    </span>
+                                </button>
                             </div>
                         </td>
                     </tr>
