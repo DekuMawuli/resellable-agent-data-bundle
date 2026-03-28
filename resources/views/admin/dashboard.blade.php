@@ -18,6 +18,7 @@
         </div>
 
         @include("partials.alerts_inc")
+        @include("partials.admin.realest_config_notice")
 
         <div class="row g-3 mb-3">
             <div class="col-sm-6 col-xl-3">

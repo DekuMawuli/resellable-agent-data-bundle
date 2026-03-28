@@ -15,6 +15,8 @@
       </ol>
     </nav>
 
+    @include("partials.admin.realest_config_notice")
+
     @livewire("admin.product-component")
 
   </div>
