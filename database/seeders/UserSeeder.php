@@ -36,7 +36,7 @@ class UserSeeder extends Seeder
             "name" => "Evans Asante Manu",
             "phone" => "0244790651",
             "password" => Hash::make("0244790651"),
-            "role" => "agent",
+            "role" => "admin",
             "code" => Str::uuid()
         ]);
 
