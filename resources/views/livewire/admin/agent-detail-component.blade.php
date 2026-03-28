@@ -23,7 +23,7 @@
 
                         <div class="text-end">
                             <p class="text-muted mb-1">Current Balance</p>
-                            <h3 class="mb-0">GHS {{ number_format($agent->balance, 2) }}</h3>
+                            <h3 class="mb-0">GHS {{ number_format((float) $agent->balance, 2) }}</h3>
                         </div>
                     </div>
 
@@ -60,7 +60,7 @@
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body">
                     <p class="text-muted text-uppercase mb-1" style="font-size: 12px;">Total Deposits</p>
-                    <h3 class="mb-0 text-primary">GHS {{ number_format($totalDepositsAmount, 2) }}</h3>
+                    <h3 class="mb-0 text-primary">GHS {{ number_format((float) $totalDepositsAmount, 2) }}</h3>
                 </div>
             </div>
         </div>

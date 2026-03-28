@@ -49,7 +49,13 @@
                     <div class="card-body">
                         <h6 class="text-uppercase font-size-12 text-muted mb-3">Account Balance</h6>
                         <div class="d-flex align-items-center justify-content-between">
-                            <span class="h3 mb-0 text-success">GHS {{ number_format($balance, 2) }}</span>
+                            <span class="h3 mb-0 text-success">
+                                @if (is_numeric($balance))
+                                    GHS {{ number_format((float) $balance, 2) }}
+                                @else
+                                    {{ $balance }}
+                                @endif
+                            </span>
                             <i class="mdi mdi-wallet-outline font-size-24 text-success"></i>
                         </div>
                     </div>
