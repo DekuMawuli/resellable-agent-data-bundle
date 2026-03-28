@@ -78,6 +78,7 @@
             background: #fff;
             border: 1px solid rgba(15, 23, 42, 0.08);
             border-radius: 18px;
+            box-shadow: 12px 0 20px -18px rgba(15, 23, 42, 0.18), -12px 0 20px -18px rgba(15, 23, 42, 0.18);
             padding: 14px;
           }
 
