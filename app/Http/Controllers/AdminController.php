@@ -184,7 +184,10 @@ class AdminController extends Controller
 
             CustomHelper::message("success", "Order forwarded successfully.");
         } catch (\Throwable $e) {
-            Log::error("Realest API Exception during admin controller approval for Order #{$order->code}: " . $e->getMessage());
+            Log::channel("realest")->error("Realest API exception during admin approvePurchase", [
+                "order_code" => $order->code,
+                "message" => $e->getMessage(),
+            ]);
             CustomHelper::message("danger", "An unexpected error occurred while forwarding the order.");
         }
 

@@ -126,6 +126,53 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sensitive service logs (daily rotation, audit-friendly)
+        |--------------------------------------------------------------------------
+        | Files: storage/logs/<channel>-YYYY-MM-DD.log
+        | Retention: LOG_SERVICE_FILES_DAYS (default 30)
+        */
+        'paystack' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/paystack.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => (int) env('LOG_SERVICE_FILES_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'realest' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/realest.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => (int) env('LOG_SERVICE_FILES_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'unimarket' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/unimarket.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => (int) env('LOG_SERVICE_FILES_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'other_integration' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/other-integration.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => (int) env('LOG_SERVICE_FILES_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
+        'orders' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/orders.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => (int) env('LOG_SERVICE_FILES_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
     ],
 
 ];

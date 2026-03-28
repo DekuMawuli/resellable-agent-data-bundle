@@ -72,7 +72,10 @@ class AdminDashboardOrdersComponent extends Component
 
             CustomHelper::message("success", "Order #" . $order->code . " was forwarded successfully.");
         } catch (\Throwable $e) {
-            Log::error("Realest API Exception during manual approval for Order #{$order->code}: " . $e->getMessage());
+            Log::channel("realest")->error("Realest API exception during dashboard order approval", [
+                "order_code" => $order->code,
+                "message" => $e->getMessage(),
+            ]);
             CustomHelper::message("danger", "An unexpected error occurred. Please contact support.");
             return redirect()->back();
         }

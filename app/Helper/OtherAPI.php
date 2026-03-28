@@ -2,8 +2,10 @@
 
 namespace App\Helper;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class OtherAPI
 {
@@ -36,10 +38,20 @@ class OtherAPI
      */
     public static function purchaseData(string $recipient, string $capacity, string $networkKey): ?array
     {
-        $response = self::apiClient()->post('/api/external/data-purchase', [
-            'networkKey' => $networkKey,
-            'recipient' => $recipient,
-            'capacity' => $capacity,
+        $response = self::apiClient()->post("/api/external/data-purchase", [
+            "networkKey" => $networkKey,
+            "recipient" => $recipient,
+            "capacity" => $capacity,
+        ]);
+
+        $level = $response->successful() ? "info" : "warning";
+        if ($response->serverError()) {
+            $level = "error";
+        }
+        Log::channel("other_integration")->{$level}("Other API data-purchase", [
+            "http_status" => $response->status(),
+            "network_key" => $networkKey,
+            "capacity" => $capacity,
         ]);
 
         return $response->json();
@@ -53,10 +65,20 @@ class OtherAPI
      */
     public static function checkOrderStatus(string $reference): ?array
     {
-        $response = self::apiClient()->get('/api/external/order-status', [
-            'reference' => $reference,
+        $response = self::apiClient()->get("/api/external/order-status", [
+            "reference" => $reference,
+        ]);
+
+        $level = $response->successful() ? "info" : "warning";
+        if ($response->serverError()) {
+            $level = "error";
+        }
+        Log::channel("other_integration")->{$level}("Other API order-status", [
+            "http_status" => $response->status(),
+            "reference_prefix" => Str::limit($reference, 16, ""),
         ]);
 
         return $response->json();
     }
 }
+

@@ -199,10 +199,18 @@ class AgentProductsComponent extends Component
 
             session()->forget(["ORDER_PAYMENT", "TOPUP_ID", "TOPUP_AMOUNT"]);
             $this->lastOrderReference = (string) ($responseData["reference"] ?? "");
+            Log::channel("orders")->info("Agent product purchase completed", [
+                "user_id" => Auth::id(),
+                "reference" => $this->lastOrderReference,
+                "product_code" => $this->selectedProductCode,
+            ]);
             $this->flashMessage("success", "Purchase Successful");
             $this->wizardStep = "success";
         } catch (\Throwable $e) {
-            Log::error("Livewire purchase failed for user " . Auth::id() . ": " . $e->getMessage());
+            Log::channel("orders")->error("Agent product purchase failed", [
+                "user_id" => Auth::id(),
+                "message" => $e->getMessage(),
+            ]);
             $this->flashMessage("danger", "An unexpected error occurred. Please try again.");
         } finally {
             $this->isSubmitting = false;

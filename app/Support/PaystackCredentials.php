@@ -16,7 +16,7 @@ final class PaystackCredentials
             if (filled($secret)) {
                 return (string) $secret;
             }
-            Log::warning("Live Paystack is enabled but PAYSTACK_SECRET_KEY is empty; using PAYSTACK_TEST_SECRET_KEY.");
+            Log::channel("paystack")->warning("Live Paystack enabled but PAYSTACK_SECRET_KEY empty; falling back to test secret.");
             return (string) config("services.paystack.test_secret", "");
         }
 

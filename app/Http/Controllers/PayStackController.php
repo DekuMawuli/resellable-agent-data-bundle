@@ -45,9 +45,6 @@ class PayStackController extends Controller
         ]);
 
 
-
-
-
         if ($response->successful()) {
             $data = $response->json();
 
@@ -63,12 +60,25 @@ class PayStackController extends Controller
                     "status" => "pending",
                     "paystack_live_mode" => $useLive,
                 ]);
+                Log::channel("paystack")->info("Paystack initialize succeeded", [
+                    "user_id" => $request->user()->id,
+                    "amount" => $amount,
+                    "type" => $request->type,
+                    "live_mode" => $useLive,
+                    "reference" => $data["data"]["reference"] ?? null,
+                ]);
                 return redirect()->to($data["data"]["authorization_url"]);
             }
         }
 
         $json = $response->json();
         $msg = is_array($json) ? ($json["message"] ?? "Payment initialization failed.") : "Payment initialization failed.";
+        Log::channel("paystack")->warning("Paystack initialize failed", [
+            "user_id" => $request->user()->id,
+            "http_status" => $response->status(),
+            "live_mode" => $useLive,
+            "message" => is_string($msg) ? $msg : null,
+        ]);
         CustomHelper::message("danger", is_string($msg) ? $msg : "Payment initialization failed.");
         return back();
     }
@@ -81,6 +91,7 @@ class PayStackController extends Controller
         $reference = $request->query('reference');
 
         if (!$reference) {
+            Log::channel("paystack")->warning("Paystack callback missing reference query param");
             CustomHelper::message("danger", "An error occurred while trying to process your payment. Please try again.");
             return redirect()->route("agent.dashboard");
         }
@@ -95,20 +106,25 @@ class PayStackController extends Controller
             'Cache-Control' => 'no-cache',
         ])->get("https://api.paystack.co/transaction/verify/{$reference}");
 
-        // Decode the response
         $paymentDetails = $response->json();
+        $gatewayStatus = is_array($paymentDetails) && isset($paymentDetails["data"]["status"])
+            ? $paymentDetails["data"]["status"]
+            : null;
+        Log::channel("paystack")->info("Paystack callback verify response", [
+            "reference" => $reference,
+            "http_status" => $response->status(),
+            "gateway_status" => $gatewayStatus,
+            "live_mode" => $useLive,
+        ]);
 
-
-
-        // Check if the request was successful
-        if ($response->successful() && $paymentDetails['data']['status'] === 'success') {
+        if ($response->successful() && is_array($paymentDetails) && ($paymentDetails["data"]["status"] ?? null) === "success") {
             // TODO: Save transaction details in the database
 
             $transaction = Transaction::where("code", $reference)->get();
 
             if (count($transaction) == 1){
                 $transaction = $transaction->first();
-                if ($paymentDetails['data']['status'] == 'success'){
+                if (($paymentDetails["data"]["status"] ?? null) == "success") {
                         TopUp::create([
                             "code" => $reference,
                             "customer_id" => auth()->id(),
@@ -127,17 +143,22 @@ class PayStackController extends Controller
                         $transaction->save();
 
                         CustomHelper::message("success", "Payment of {$actualBalance} was successful");
+                        Log::channel("paystack")->info("Paystack callback wallet credited", [
+                            "reference" => $reference,
+                            "user_id" => auth()->id(),
+                            "amount" => (float) $actualBalance,
+                        ]);
 
                         return redirect()->route("agent.dashboard");
                 }
                 return redirect()->route("agent.dashboard");
             }
-            elseif ($paymentDetails['data']['status'] == 'failed'){
-                CustomHelper::message("danger", $paymentDetails["data"]["gateway_response"]);
+            elseif (($paymentDetails["data"]["status"] ?? null) == "failed") {
+                CustomHelper::message("danger", $paymentDetails["data"]["gateway_response"] ?? "");
                 return redirect()->route("agent.dashboard");
             }
-            elseif ($paymentDetails['data']['status'] == 'pending') {
-                CustomHelper::message("info", $paymentDetails["data"]["gateway_response"]);
+            elseif (($paymentDetails["data"]["status"] ?? null) == "pending") {
+                CustomHelper::message("info", $paymentDetails["data"]["gateway_response"] ?? "");
                 return redirect()->route("agent.dashboard");
             }
         }
@@ -160,8 +181,7 @@ class PayStackController extends Controller
             $transaction = Transaction::where('code', $reference)->first();
 
             if (!$transaction) {
-                // This is a critical issue. A reference is being verified that our system doesn't know about.
-                Log::error("Paystack verification attempt for an unknown reference: {$reference}");
+                Log::channel("paystack")->error("Paystack verify: unknown reference", ["reference" => $reference]);
                 CustomHelper::message('danger', 'Transaction reference not found in our system.');
                 return redirect()->route('agent.dashboard');
             }
@@ -200,9 +220,10 @@ class PayStackController extends Controller
 
             // Check for failed API call or invalid response from Paystack
             if (!$response->successful() || !$paymentDetails['status']) {
-                Log::error('Paystack verification failed', [
-                    'reference' => $reference,
-                    'response' => $paymentDetails
+                Log::channel("paystack")->error("Paystack verify API failed", [
+                    "reference" => $reference,
+                    "http_status" => $response->status(),
+                    "paystack_ok" => $paymentDetails["status"] ?? null,
                 ]);
                 CustomHelper::message('danger', 'Could not verify the transaction at this time. Please contact support.');
                 return redirect()->route('agent.dashboard');
@@ -241,6 +262,11 @@ class PayStackController extends Controller
                     });
 
                     CustomHelper::message('success', "Payment of {$transaction->amount} was successful and your wallet has been credited.");
+                    Log::channel("paystack")->info("Paystack verify POST wallet credited", [
+                        "reference" => $reference,
+                        "customer_id" => $transaction->customer_id,
+                        "amount" => (float) $transaction->amount,
+                    ]);
                     return redirect()->route('agent.dashboard');
 
                 case 'failed':
@@ -268,14 +294,18 @@ class PayStackController extends Controller
 
                 default:
                     // Handle any unexpected status
-                    Log::warning("Paystack verification returned an unhandled status: {$status}", ['reference' => $reference]);
+                    Log::channel("paystack")->warning("Paystack verify unhandled status", [
+                        "reference" => $reference,
+                        "status" => $status,
+                    ]);
                     CustomHelper::message('info', "Transaction status is currently '{$status}'. Please check again later or contact support.");
                     return redirect()->route('agent.dashboard');
             }
 
         } catch (\Exception $e) {
-            Log::error("An exception occurred during Paystack verification for reference: {$reference}", [
-                'error' => $e->getMessage()
+            Log::channel("paystack")->error("Paystack verify exception", [
+                "reference" => $reference,
+                "message" => $e->getMessage(),
             ]);
 
             CustomHelper::message('danger', 'A system error occurred. Please contact support.');

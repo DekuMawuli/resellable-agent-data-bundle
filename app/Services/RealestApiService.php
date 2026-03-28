@@ -5,12 +5,19 @@ namespace App\Services;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RealestApiService
 {
     public function purchaseBundle(string $network, string $recipient, string $size): array
     {
         if (!$this->isConfigured()) {
+            Log::channel("realest")->warning("Realest API purchase skipped: credentials not configured", [
+                "network" => $network,
+                "size" => $size,
+            ]);
+
             return $this->missingConfigurationResponse();
         }
 
@@ -20,18 +27,53 @@ class RealestApiService
             "phone_number" => $recipient,
         ]);
 
+        $this->logRealestExchange("purchase", "POST /purchase", $response, [
+            "network" => $network,
+            "size" => $size,
+            "recipient_last4" => Str::substr(preg_replace("/\D/", "", $recipient) ?? "", -4),
+        ]);
+
         return $this->formatResponse($response);
     }
 
     public function getOrderStatus(string $orderCode): array
     {
         if (!$this->isConfigured()) {
+            Log::channel("realest")->warning("Realest API order-status skipped: credentials not configured", [
+                "order_code_prefix" => Str::limit($orderCode, 16, ""),
+            ]);
+
             return $this->missingConfigurationResponse();
         }
 
         $response = $this->apiClient()->get("/order-status/" . urlencode($orderCode));
 
+        $this->logRealestExchange("order_status", "GET /order-status/*", $response, [
+            "order_code_prefix" => Str::limit($orderCode, 16, ""),
+        ]);
+
         return $this->formatResponse($response);
+    }
+
+    private function logRealestExchange(string $action, string $endpointLabel, Response $response, array $context = []): void
+    {
+        $payload = $response->json();
+        $apiStatus = is_array($payload) ? ($payload["status"] ?? null) : null;
+        $msg = is_array($payload) && isset($payload["message"]) && is_string($payload["message"])
+            ? Str::limit($payload["message"], 240)
+            : null;
+
+        $level = $response->successful() ? "info" : "warning";
+        if ($response->serverError()) {
+            $level = "error";
+        }
+
+        Log::channel("realest")->{$level}("Realest API {$action}", array_merge($context, [
+            "endpoint" => $endpointLabel,
+            "http_status" => $response->status(),
+            "api_status" => $apiStatus,
+            "message" => $msg,
+        ]));
     }
 
     private function apiClient(): PendingRequest
