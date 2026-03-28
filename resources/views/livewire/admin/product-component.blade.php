@@ -86,6 +86,35 @@
 .catalog-panel__status--empty   { color: #9ca3af; }
 .catalog-panel__status--error   { color: #dc2626; }
 .catalog-panel__status--loading { color: #6366f1; }
+.catalog-panel--loading {
+    pointer-events: none;
+    opacity: .6;
+}
+.catalog-loading-bar {
+    height: 3px;
+    background: linear-gradient(90deg, #6366f1 0%, #818cf8 50%, #6366f1 100%);
+    background-size: 200% 100%;
+    animation: catalogBarSweep 1.1s linear infinite;
+    border-radius: 9999px;
+    margin: .5rem .7rem;
+}
+@keyframes catalogBarSweep {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.bundle-size-locked {
+    background: #f5f7ff !important;
+    color: #a5b4fc !important;
+    cursor: not-allowed !important;
+    border-color: #c7d2fe !important;
+}
+.bundle-size-hint {
+    font-size: .68rem;
+    margin-top: .3rem;
+    display: flex;
+    align-items: center;
+    gap: .3rem;
+}
 .catalog-cost-note {
     font-size: .65rem;
     color: #6366f1;
@@ -128,15 +157,21 @@
                                   <span class="catalog-panel__title">
                                       <i class="fas fa-satellite-dish me-1"></i>Realest Catalog
                                   </span>
-                                  <span class="catalog-panel__hint">tap a row to use</span>
+                                  <span class="catalog-panel__hint" wire:loading.remove wire:target="categoryId,setForEdit">
+                                      tap a row to use
+                                  </span>
+                                  <span class="catalog-panel__hint" wire:loading wire:target="categoryId,setForEdit"
+                                        style="color:#6366f1;font-weight:600;">
+                                      loading…
+                                  </span>
                               </div>
 
-                              {{-- Loading state while Livewire round-trip completes --}}
-                              <div wire:loading wire:target="categoryId" class="catalog-panel__status catalog-panel__status--loading">
-                                  <span class="spinner-border spinner-border-sm"></span> Fetching…
+                              {{-- Animated progress bar while fetching --}}
+                              <div wire:loading wire:target="categoryId,setForEdit">
+                                  <div class="catalog-loading-bar"></div>
                               </div>
 
-                              <div wire:loading.remove wire:target="categoryId">
+                              <div wire:loading.remove wire:target="categoryId,setForEdit">
                                   @if ($catalogStatus === 'loaded' && count($catalogProducts))
                                       <div class="catalog-panel__body">
                                           @foreach ($catalogProducts as $item)
@@ -177,9 +212,28 @@
                   </div>
 
                   <div class="form-group">
-                      <label for="">Bundle Size (GB)</label>
-                      <input type="number" wire:model.blur="name" class="form-control"
-                          placeholder="{{ $catalogStatus === 'loaded' ? 'Or type manually' : 'e.g. 7' }}">
+                      @php $catalogLocked = $catalogStatus === 'loaded'; @endphp
+                      <label for="">
+                          Bundle Size (GB)
+                          @if ($catalogLocked)
+                              <span style="font-size:.65rem;font-weight:400;color:#818cf8;margin-left:.35rem;">
+                                  <i class="fas fa-lock" style="font-size:.6rem;"></i> select from catalog
+                              </span>
+                          @endif
+                      </label>
+                      <input
+                          type="number"
+                          wire:model.blur="name"
+                          class="form-control {{ $catalogLocked ? 'bundle-size-locked' : '' }}"
+                          placeholder="{{ $catalogLocked ? 'Pick a size from the catalog above' : 'e.g. 7' }}"
+                          @if ($catalogLocked) disabled readonly @endif
+                      >
+                      @if ($catalogLocked && !$name)
+                          <div class="bundle-size-hint text-muted">
+                              <i class="fas fa-arrow-up" style="font-size:.6rem;color:#818cf8;"></i>
+                              <span style="font-size:.68rem;">Click a product in the catalog to set the size.</span>
+                          </div>
+                      @endif
                       @error("name")
                           <small class="text-danger d-block mt-1">{{ $message }}</small>
                       @enderror

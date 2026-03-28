@@ -152,15 +152,16 @@ class ProductComponent extends Component
 
     public function setForEdit($code)
     {
-
-        // dd($this->newProduct);
         $this->selectedProduct = Product::firstWhere("code", "=", $code);
-        $this->retailPrice = $this->selectedProduct->agent_price;
-        $this->name = $this->selectedProduct->name;
-        $this->categoryId = $this->selectedProduct->category_id;
-        $this->outOfStock = $this->selectedProduct->out_to_stock;
+        $this->retailPrice     = $this->selectedProduct->agent_price;
+        $this->name            = $this->selectedProduct->name;
+        $this->categoryId      = $this->selectedProduct->category_id;
+        $this->outOfStock      = $this->selectedProduct->out_to_stock;
+        $this->updateMode      = true;
 
-        $this->updateMode = true;
+        // Load the catalog for the existing product's network so the admin
+        // can see costs and pick a different size if needed.
+        $this->updatedCategoryId();
     }
 
     public function toggleStockStatus($code)
