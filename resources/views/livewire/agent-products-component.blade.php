@@ -72,7 +72,7 @@
 
                             @if(!$product->out_to_stock)
                                 <button type="button" wire:click="startPurchase('{{ $product->code }}')" class="btn shop-buy-btn">
-                                    <i class="mdi mdi-cart-outline me-1"></i> Buy Now
+                                    <i class="fas fa-shopping-cart me-1" aria-hidden="true"></i> Buy Now
                                 </button>
                             @else
                                 <span class="shop-stock-badge">Out of Stock</span>
@@ -85,7 +85,7 @@
             <div class="col-12">
                 <div class="card shop-empty-card">
                     <div class="card-body text-center py-5">
-                        <i class="mdi mdi-package-variant-remove font-size-24 d-block mb-2"></i>
+                        <i class="fas fa-box-open font-size-24 d-block mb-2" aria-hidden="true"></i>
                         <h5 class="mb-1">No packages found</h5>
                         <p class="text-muted mb-0">Try changing your search or filter options.</p>
                     </div>

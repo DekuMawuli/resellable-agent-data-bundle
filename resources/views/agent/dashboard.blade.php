@@ -30,7 +30,7 @@
       </div>
 
       <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#topUp">
-        <i class="mdi mdi-wallet-plus-outline me-1"></i> Top Up Balance
+        <i class="fas fa-wallet me-1" aria-hidden="true"></i> Top Up Balance
       </button>
     </div>
 
@@ -43,7 +43,7 @@
             <p class="text-uppercase font-size-12 text-muted mb-1">Total Orders</p>
             <div class="d-flex align-items-center justify-content-between">
               <h3 class="mb-0">{{ $ordersCount }}</h3>
-              <i class="mdi mdi-clipboard-list-outline font-size-24 text-primary"></i>
+              <i class="fas fa-clipboard-list font-size-24 text-primary" aria-hidden="true"></i>
             </div>
           </div>
         </div>
@@ -55,7 +55,7 @@
             <p class="text-uppercase font-size-12 text-muted mb-1">Completed Orders</p>
             <div class="d-flex align-items-center justify-content-between">
               <h3 class="mb-0">{{ $closedOrders }}</h3>
-              <i class="mdi mdi-check-decagram-outline font-size-24 text-success"></i>
+              <i class="fas fa-clipboard-check font-size-24 text-success" aria-hidden="true"></i>
             </div>
           </div>
         </div>
@@ -67,7 +67,7 @@
             <p class="text-uppercase font-size-12 text-muted mb-1">Open Orders</p>
             <div class="d-flex align-items-center justify-content-between">
               <h3 class="mb-0">{{ $openOrders }}</h3>
-              <i class="mdi mdi-progress-clock font-size-24 text-warning"></i>
+              <i class="fas fa-clock font-size-24 text-warning" aria-hidden="true"></i>
             </div>
           </div>
         </div>
@@ -79,7 +79,7 @@
             <p class="text-uppercase font-size-12 text-muted mb-1">Wallet Balance</p>
             <div class="d-flex align-items-center justify-content-between">
               <h3 class="mb-0">GHS {{ number_format((float) auth()->user()->balance, 2) }}</h3>
-              <i class="mdi mdi-wallet-outline font-size-24 text-info"></i>
+              <i class="fas fa-wallet font-size-24 text-info" aria-hidden="true"></i>
             </div>
           </div>
         </div>
@@ -144,13 +144,13 @@
             <div class="d-flex flex-wrap gap-2">
               @if($telHref)
                 <a href="{{ $telHref }}" class="btn btn-primary btn-sm">
-                  <i class="mdi mdi-phone-outline me-1"></i> Call Support
+                  <i class="fas fa-phone me-1" aria-hidden="true"></i> Call Support
                 </a>
               @endif
 
               @if($whatsappHref)
                 <a href="{{ $whatsappHref }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm">
-                  <i class="mdi mdi-whatsapp me-1"></i> WhatsApp
+                  <i class="fab fa-whatsapp me-1" aria-hidden="true"></i> WhatsApp
                 </a>
               @endif
             </div>

@@ -41,10 +41,10 @@
                         <td>
                             <div class="action-group">
                             <button wire:click="setForEdit('{{ $category->code }}')" class="btn btn-info btn-sm">
-                                <i class="mdi mdi-pencil-outline"></i>
+                                <i class="fas fa-pen" aria-hidden="true"></i>
                             </button>
                              <button wire:click="deleteCat('{{ $category->code }}')" class="btn btn-danger btn-sm">
-                                <i class="mdi mdi-trash-can-outline"></i>
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             </button>
                             </div>
                         </td>

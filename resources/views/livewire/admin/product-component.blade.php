@@ -88,13 +88,13 @@
                         <td>
                             <div class="action-group">
                             <button wire:click="setForEdit('{{ $product->code }}')" class="btn btn-info btn-sm">
-                                <i class="mdi mdi-pencil-outline"></i>
+                                <i class="fas fa-pen" aria-hidden="true"></i>
                             </button>
                              <button wire:click="deleteProduct('{{ $product->code }}')" class="btn btn-danger btn-sm">
-                                <i class="mdi mdi-trash-can-outline"></i>
+                                <i class="fas fa-trash-alt" aria-hidden="true"></i>
                             </button>
                             <button wire:click="toggleStockStatus('{{ $product->code }}')" class="btn btn-warning btn-sm">
-                                <i class="mdi mdi-store-outline"></i> Toggle Stock
+                                <i class="fas fa-store" aria-hidden="true"></i> Toggle Stock
                             </button>
                             </div>
                         </td>

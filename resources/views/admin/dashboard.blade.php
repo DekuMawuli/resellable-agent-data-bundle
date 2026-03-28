@@ -26,7 +26,7 @@
                         <h6 class="text-uppercase font-size-12 text-muted mb-3">Active Agents</h6>
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="h3 mb-0 text-primary">{{ $activeAgents }}</span>
-                            <i class="mdi mdi-account-check-outline font-size-24 text-primary"></i>
+                            <i class="fas fa-user-check font-size-24 text-primary" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
                         <h6 class="text-uppercase font-size-12 text-muted mb-3">Today's Sales</h6>
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="h3 mb-0 text-info">GHS {{ number_format((float) $todaySales, 2) }}</span>
-                            <i class="mdi mdi-cash-fast font-size-24 text-info"></i>
+                            <i class="fas fa-money-bill-wave font-size-24 text-info" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -56,7 +56,7 @@
                                     {{ $balance }}
                                 @endif
                             </span>
-                            <i class="mdi mdi-wallet-outline font-size-24 text-success"></i>
+                            <i class="fas fa-wallet font-size-24 text-success" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
                         <h6 class="text-uppercase font-size-12 text-muted mb-3">Total Deposits</h6>
                         <div class="d-flex align-items-center justify-content-between">
                             <span class="h3 mb-0 text-danger">{{ $totalDeposits }}</span>
-                            <i class="mdi mdi-cash-multiple font-size-24 text-danger"></i>
+                            <i class="fas fa-coins font-size-24 text-danger" aria-hidden="true"></i>
                         </div>
                     </div>
                 </div>

@@ -19,7 +19,7 @@
         <h4 class="mb-0">Buy Package</h4>
       </div>
       <a href="{{ route("agent.orders") }}" class="btn btn-outline-primary btn-sm">
-        <i class="mdi mdi-clipboard-list-outline me-1"></i> View My Orders
+        <i class="fas fa-clipboard-list me-1" aria-hidden="true"></i> View My Orders
       </a>
     </div>
 

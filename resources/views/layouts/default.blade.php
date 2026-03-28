@@ -17,9 +17,8 @@
 
     <link href="{{ asset('admin_assets/libs/morris.js/morris.css') }}" rel="stylesheet" type="text/css" />
 
-    <!-- App css -->
+    <!-- App css (MDI/box bundle removed — views use Font Awesome only) -->
     <link href="{{ asset('admin_assets/css/style.min.css') }}" rel="stylesheet" type="text/css">
-    <link href="{{ asset('admin_assets/css/icons.min.css') }}" rel="stylesheet" type="text/css">
     <link href="{{ asset('admin_assets/css/custom-admin.css') }}" rel="stylesheet" type="text/css">
 
     {{-- Critical topbar: survives missing cache/CDN issues; keeps menu icon + Paystack badges visible --}}

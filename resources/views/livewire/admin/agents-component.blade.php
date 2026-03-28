@@ -31,18 +31,18 @@
                             <div class="action-group">
                             @if(!blank($agentCode))
                                 <a href="{{ route("root.agent_detail", ['code' => $agentCode]) }}" class="btn btn-success btn-sm">
-                                   <i class="mdi mdi-eye-outline"></i> View
+                                   <i class="fas fa-eye" aria-hidden="true"></i> View
                                 </a>
                                 <button
                                         type="button"
                                         wire:confirm.prompt="Are you sure?\n\nType YES to confirm|YES"
                                         wire:click="deleteAcc('{{ $agentCode }}')"
                                         class="btn btn-danger btn-sm">
-                                   <i class="mdi mdi-trash-can-outline"></i> Delete
+                                   <i class="fas fa-trash-alt" aria-hidden="true"></i> Delete
                                 </button>
                                 @if($agent->agent_status != "active")
                                     <button wire:click="activateAcc('{{ $agentCode }}')" class="btn btn-dark btn-sm">
-                                        <i class="mdi mdi-account-check-outline"></i> Activate Account
+                                        <i class="fas fa-user-check" aria-hidden="true"></i> Activate Account
                                     </button>
                                 @endif
                             @else

@@ -30,7 +30,7 @@
                     @if($agent->agent_status !== 'active')
                         <div class="mt-3">
                             <button wire:click="activateAcc" class="btn btn-success btn-sm">
-                                <i class="mdi mdi-account-check-outline"></i> Activate Account
+                                <i class="fas fa-user-check" aria-hidden="true"></i> Activate Account
                             </button>
                         </div>
                     @endif
