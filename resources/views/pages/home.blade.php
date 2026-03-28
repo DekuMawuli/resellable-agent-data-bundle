@@ -50,32 +50,8 @@
           }
 
           .recent-orders-marquee {
-            position: relative;
             overflow: hidden;
             padding: 10px 0;
-            mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-          }
-
-          .recent-orders-marquee::before,
-          .recent-orders-marquee::after {
-            content: "";
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 72px;
-            z-index: 2;
-            pointer-events: none;
-          }
-
-          .recent-orders-marquee::before {
-            left: 0;
-            background: linear-gradient(90deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
-          }
-
-          .recent-orders-marquee::after {
-            right: 0;
-            background: linear-gradient(270deg, #ffffff 0%, rgba(255, 255, 255, 0) 100%);
           }
 
           .recent-orders-track {
@@ -174,16 +150,6 @@
           }
 
           @media (max-width: 575.98px) {
-            .recent-orders-marquee {
-              mask-image: none;
-              -webkit-mask-image: none;
-            }
-
-            .recent-orders-marquee::before,
-            .recent-orders-marquee::after {
-              display: none;
-            }
-
             .recent-orders-track {
               gap: 14px;
               animation-duration: 24s;
