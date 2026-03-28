@@ -418,12 +418,12 @@
                                 <div class="cred-audit__label">Last updated</div>
                                 <div class="cred-audit__datetime">{{ $cred->updated_at->format("j M Y") }}</div>
                                 <div class="cred-audit__time">{{ $cred->updated_at->format("g:i A") }}</div>
-                                @if ($cred->editor)
+                                <!-- @if ($cred->editor)
                                     <div class="cred-audit__user" title="{{ $cred->editor->name }}">
                                         <i class="fas fa-user" aria-hidden="true"></i>
                                         <span>{{ $cred->editor->name }}</span>
                                     </div>
-                                @endif
+                                @endif -->
                             @else
                                 <span class="cred-audit--empty">—</span>
                             @endif
