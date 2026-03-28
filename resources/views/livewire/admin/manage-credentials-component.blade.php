@@ -1,6 +1,15 @@
-<div>
+<div class="cred-vault-page">
 @push('styles')
 <style>
+/* ── Page shell (dark) ───────────────────────────────────────────────────── */
+.cred-vault-page {
+    background: #0f1419;
+    border: 1px solid #2d333b;
+    border-radius: .75rem;
+    padding: 1.25rem 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
 /* ── Vault banner ─────────────────────────────────────────────────────────── */
 .vault-banner {
     border-radius: .75rem;
@@ -57,16 +66,17 @@
 }
 
 /* ── Group cards ──────────────────────────────────────────────────────────── */
-.cred-group { margin-bottom: 1.5rem; border-radius: .6rem; overflow: hidden; border: 1px solid #dee2e6; }
+.cred-group { margin-bottom: 1.5rem; border-radius: .6rem; overflow: hidden; border: 1px solid #30363d; background: #161b22; }
 .cred-group-header {
     display: flex; align-items: center; gap: .6rem;
     padding: .7rem 1rem;
     font-size: .72rem; font-weight: 700;
     letter-spacing: .08em; text-transform: uppercase;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid #30363d;
 }
-.cred-group--paystack .cred-group-header { background: #f0f9ff; color: #0369a1; }
-.cred-group--external .cred-group-header { background: #faf5ff; color: #7c3aed; }
+.cred-group-header .text-muted { color: #8b949e !important; }
+.cred-group--paystack .cred-group-header { background: rgba(14,165,233,.12); color: #7dd3fc; }
+.cred-group--external .cred-group-header { background: rgba(168,85,247,.12); color: #d8b4fe; }
 
 .cred-group-header__dot {
     width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
@@ -81,12 +91,15 @@
     align-items: center;
     gap: .75rem;
     padding: .9rem 1rem;
-    background: #fff;
-    border-bottom: 1px solid #f1f5f9;
+    background: #1c2128;
+    border-bottom: 1px solid #30363d;
     transition: background .15s;
 }
 .cred-row:last-child { border-bottom: none; }
-.cred-row:hover { background: #fafcff; }
+.cred-row:hover { background: #252b33; }
+.cred-row:not(.cred-row--editing) {
+    grid-template-columns: 1fr minmax(148px, max-content);
+}
 
 .cred-row__main { display: flex; align-items: center; gap: .9rem; min-width: 0; }
 .cred-row__key-icon {
@@ -94,20 +107,20 @@
     display: flex; align-items: center; justify-content: center;
     font-size: .85rem; flex-shrink: 0;
 }
-.cred-group--paystack .cred-row__key-icon { background: #e0f2fe; color: #0284c7; }
-.cred-group--external .cred-row__key-icon { background: #f3e8ff; color: #9333ea; }
+.cred-group--paystack .cred-row__key-icon { background: rgba(14,165,233,.18); color: #38bdf8; }
+.cred-group--external .cred-row__key-icon { background: rgba(168,85,247,.18); color: #c084fc; }
 
-.cred-row__label { font-size: .85rem; font-weight: 600; color: #1e293b; line-height: 1.3; }
-.cred-row__slug  { font-size: .68rem; color: #94a3b8; font-family: 'Courier New', monospace; margin-top: .05rem; }
+.cred-row__label { font-size: .85rem; font-weight: 600; color: #e6edf3; line-height: 1.3; }
+.cred-row__slug  { font-size: .68rem; color: #8b949e; font-family: 'Courier New', monospace; margin-top: .05rem; }
 
 /* value display */
 .cred-val { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .cred-val__chip {
     font-family: 'Courier New', monospace;
     font-size: .78rem;
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
+    background: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
     border-radius: .3rem;
     padding: .2rem .6rem;
     letter-spacing: .04em;
@@ -117,39 +130,112 @@
     font-size: .6rem; font-weight: 700; letter-spacing: .06em;
     text-transform: uppercase; border-radius: 9999px; padding: .15rem .55rem;
 }
-.cred-val__pill--db  { background: #dcfce7; color: #15803d; }
-.cred-val__pill--env { background: #fef3c7; color: #92400e; }
-.cred-val__pill--none { background: #f1f5f9; color: #94a3b8; }
+.cred-val__pill--db  { background: rgba(34,197,94,.22); color: #4ade80; }
+.cred-val__pill--env { background: rgba(234,179,8,.2); color: #fcd34d; }
+.cred-val__pill--none { background: #21262d; color: #8b949e; }
 
-.cred-val__empty { font-size: .8rem; color: #cbd5e1; font-style: italic; }
+.cred-val__empty { font-size: .8rem; color: #6e7681; font-style: italic; }
 
 /* edit column */
 .cred-row__edit { min-width: 220px; }
 .cred-input {
     font-family: 'Courier New', monospace !important;
     font-size: .8rem !important;
-    border-color: #c7d2fe !important;
-    background: #fafbff !important;
+    border-color: #30363d !important;
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
 }
-.cred-input:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 .2rem rgba(99,102,241,.18) !important; }
+.cred-input:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 .2rem rgba(99,102,241,.25) !important; }
+.cred-input::placeholder { color: #6e7681; }
 
-/* audit */
-.cred-audit { font-size: .68rem; color: #cbd5e1; text-align: right; min-width: 90px; line-height: 1.5; }
+/* audit — readable on dark cards */
+.cred-audit {
+    text-align: right;
+    min-width: 140px;
+    max-width: 200px;
+    justify-self: end;
+    line-height: 1.35;
+}
+.cred-audit__label {
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: #8b949e;
+    margin-bottom: .35rem;
+}
+.cred-audit__datetime {
+    font-size: .8rem;
+    font-weight: 600;
+    color: #e6edf3;
+}
+.cred-audit__time {
+    font-size: .75rem;
+    font-weight: 500;
+    color: #8b949e;
+    margin-top: .1rem;
+}
+.cred-audit__user {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+    margin-top: .45rem;
+    padding: .28rem .55rem;
+    border-radius: .35rem;
+    background: #21262d;
+    border: 1px solid #30363d;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #c9d1d9;
+    max-width: 100%;
+}
+.cred-audit__user i {
+    color: #8b949e;
+    font-size: .72rem;
+    flex-shrink: 0;
+}
+.cred-audit__user span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cred-audit--empty {
+    font-size: .8rem;
+    font-weight: 500;
+    color: #6e7681;
+}
 
 /* ── Unlocked editing layout tweak ───────────────────────────────────────── */
 .cred-row--editing {
-    grid-template-columns: 1fr 240px 90px;
+    grid-template-columns: 1fr minmax(200px, 240px) minmax(148px, 1fr);
+}
+@media (max-width: 991.98px) {
+    .cred-row--editing {
+        grid-template-columns: 1fr;
+    }
+    .cred-audit {
+        justify-self: start;
+        text-align: left;
+        max-width: none;
+        padding-top: .5rem;
+        border-top: 1px dashed #30363d;
+        margin-top: .25rem;
+    }
+    .cred-audit__user {
+        justify-content: flex-start;
+    }
 }
 
 /* ── Save bar ─────────────────────────────────────────────────────────────── */
 .cred-save-bar {
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: .75rem;
-    background: #f0fdf4; border: 1px solid #bbf7d0;
+    background: rgba(34,197,94,.1); border: 1px solid rgba(74,222,128,.35);
     border-radius: .6rem; padding: .9rem 1.25rem;
     margin-top: 1.25rem;
 }
-.cred-save-bar__hint { font-size: .78rem; color: #166534; }
+.cred-save-bar__hint { font-size: .78rem; color: #86efac; }
 
 /* ── Modals ───────────────────────────────────────────────────────────────── */
 .vault-modal-backdrop {
@@ -159,8 +245,8 @@
     display: flex; align-items: center; justify-content: center; padding: 1rem;
 }
 .vault-modal {
-    background: #fff; border-radius: .75rem; width: 100%; max-width: 420px;
-    box-shadow: 0 24px 64px rgba(0,0,0,.22);
+    background: #21262d; border: 1px solid #30363d; border-radius: .75rem; width: 100%; max-width: 420px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.45);
     overflow: hidden;
     animation: vaultModalIn .18s ease;
 }
@@ -170,7 +256,7 @@
 }
 .vault-modal__head {
     padding: 1.25rem 1.25rem .75rem;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #30363d;
     display: flex; align-items: flex-start; justify-content: space-between; gap: .5rem;
 }
 .vault-modal__icon {
@@ -178,15 +264,38 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem; flex-shrink: 0;
 }
-.vault-modal__icon--warn  { background: #fef3c7; color: #d97706; }
-.vault-modal__icon--danger { background: #fee2e2; color: #dc2626; }
-.vault-modal__title { font-size: .95rem; font-weight: 700; color: #0f172a; margin: 0; }
-.vault-modal__sub   { font-size: .78rem; color: #64748b; margin: .2rem 0 0; }
+.vault-modal__icon--warn  { background: rgba(234,179,8,.2); color: #fbbf24; }
+.vault-modal__icon--danger { background: rgba(248,113,113,.2); color: #f87171; }
+.vault-modal__title { font-size: .95rem; font-weight: 700; color: #e6edf3; margin: 0; }
+.vault-modal__sub   { font-size: .78rem; color: #8b949e; margin: .2rem 0 0; }
 .vault-modal__body  { padding: 1rem 1.25rem; }
 .vault-modal__foot  { padding: .75rem 1.25rem 1.25rem; display: flex; justify-content: flex-end; gap: .5rem; }
 .vault-modal__note  { font-size: .75rem; border-radius: .4rem; padding: .6rem .8rem; display: flex; gap: .5rem; align-items: flex-start; }
-.vault-modal__note--warn   { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-.vault-modal__note--danger { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+.vault-modal__note--warn   { background: rgba(234,179,8,.12); border: 1px solid rgba(251,191,36,.35); color: #fcd34d; }
+.vault-modal__note--danger { background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.35); color: #fca5a5; }
+
+.cred-vault-page .vault-modal .form-label,
+.vault-modal-backdrop .form-label { color: #c9d1d9; }
+.cred-vault-page .vault-modal .form-control,
+.vault-modal-backdrop .form-control {
+    background: #0d1117;
+    border-color: #30363d;
+    color: #e6edf3;
+}
+.cred-vault-page .vault-modal .form-control:focus,
+.vault-modal-backdrop .form-control:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 .2rem rgba(99,102,241,.2);
+    background: #0d1117;
+    color: #e6edf3;
+}
+.cred-vault-page .vault-modal .btn-close,
+.vault-modal-backdrop .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: .55;
+}
+.cred-vault-page .vault-modal .btn-close:hover,
+.vault-modal-backdrop .btn-close:hover { opacity: .85; }
 </style>
 @endpush
 
@@ -306,13 +415,17 @@
                         {{-- Audit --}}
                         <div class="cred-audit">
                             @if ($cred && $cred->updated_at && $cred->hasValue())
-                                {{ $cred->updated_at->format('d M Y') }}<br>
-                                {{ $cred->updated_at->format('H:i') }}<br>
+                                <div class="cred-audit__label">Last updated</div>
+                                <div class="cred-audit__datetime">{{ $cred->updated_at->format("j M Y") }}</div>
+                                <div class="cred-audit__time">{{ $cred->updated_at->format("g:i A") }}</div>
                                 @if ($cred->editor)
-                                    <span style="color:#a0aec0;">{{ $cred->editor->name }}</span>
+                                    <div class="cred-audit__user" title="{{ $cred->editor->name }}">
+                                        <i class="fas fa-user" aria-hidden="true"></i>
+                                        <span>{{ $cred->editor->name }}</span>
+                                    </div>
                                 @endif
                             @else
-                                <span style="color:#e2e8f0;">—</span>
+                                <span class="cred-audit--empty">—</span>
                             @endif
                         </div>
 
@@ -339,7 +452,7 @@
 
     </form>
 
-</div>{{-- /outer div --}}
+</div>
 
 
 {{-- ══ UNLOCK MODAL ════════════════════════════════════════════════════════ --}}
