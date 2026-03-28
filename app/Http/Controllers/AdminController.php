@@ -46,15 +46,7 @@ class AdminController extends Controller
             ]
         );
 
-        $response = app(RealestApiService::class)->checkBalance();
 
-        if ($response['status'] != 'success'){
-            CustomHelper::message("danger", $response["message"] ?? "Could not fetch balance from Realest API");
-            $balance = "N/A";
-        }else{
-            $responseData = $response['data'];
-            $balance = $responseData['balance'];
-        }
 
         $deposits = TopUp::query()
             ->with("customer")
@@ -65,7 +57,7 @@ class AdminController extends Controller
         $ctx = [
             "activeAgents" => $agents,
             "todaySales" => $todaySales,
-            "balance" => $balance,
+            "balance" => 0,
             "deposits" => $deposits,
             "totalDeposits" => $totalDeposit,
             "setting" => $setting
