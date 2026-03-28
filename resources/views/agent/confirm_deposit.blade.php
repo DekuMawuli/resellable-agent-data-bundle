@@ -22,9 +22,12 @@
                             Amount: <b>{{ \Illuminate\Support\Facades\Session::get("TOPUP_AMOUNT") ?? 0 }}</b><br>
                             Reference: <b>{{ auth()->user()->name }}</b>
                         </p>
-                        <a class="btn btn-primary" href="{{ route("agent.confirmPayment") }}">
-                            Yes, I have made payment
-                        </a>
+                        <form method="POST" action="{{ route("agent.confirmPayment") }}">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">
+                                Yes, I have made payment
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

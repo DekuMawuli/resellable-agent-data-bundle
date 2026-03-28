@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 
 class PagesController extends Controller
 {
@@ -71,6 +72,14 @@ class PagesController extends Controller
 
 
     public function processLogin(Request $request){
+        $rateLimitKey = $this->loginRateLimitKey($request);
+
+        if (RateLimiter::tooManyAttempts($rateLimitKey, 5)) {
+            $seconds = RateLimiter::availableIn($rateLimitKey);
+            CustomHelper::message("danger", "Too many login attempts. Try again in {$seconds} seconds.");
+            return redirect(route("pages.login"))->withInput($request->only("phone"));
+        }
+
         $validatedData = $request->validate([
             "phone" => "required",
             "password" => "required"
@@ -79,28 +88,36 @@ class PagesController extends Controller
         $user = User::firstWhere("phone", "=", $validatedData['phone']);
 
         if (is_null($user)){
+            RateLimiter::hit($rateLimitKey, 300);
             CustomHelper::message("danger", "Invalid Credentials");
-            return redirect(route("pages.login"));
+            return redirect(route("pages.login"))->withInput($request->only("phone"));
         }
 
         if ($user->role == "agent"){
             if (Auth::attempt($validatedData)){
+                    $request->session()->regenerate();
+                    RateLimiter::clear($rateLimitKey);
                     return redirect(route("agent.dashboard"));
                 }
+            RateLimiter::hit($rateLimitKey, 300);
             CustomHelper::message("danger", "Invalid Credentials");
-            return redirect(route("pages.login"));
+            return redirect(route("pages.login"))->withInput($request->only("phone"));
         }
         elseif ($user->role == "admin"){
             if (Auth::attempt($validatedData)){
+                $request->session()->regenerate();
+                RateLimiter::clear($rateLimitKey);
                 session(["view-balance" => "N"]);
                 return redirect(route("root.dashboard"));
             }
+            RateLimiter::hit($rateLimitKey, 300);
             CustomHelper::message("danger", "Invalid Credentials");
-            return redirect(route("pages.login"));
+            return redirect(route("pages.login"))->withInput($request->only("phone"));
         }
 
+        RateLimiter::hit($rateLimitKey, 300);
         CustomHelper::message("danger", "Unknown Role");
-        return redirect(route("pages.login"));
+        return redirect(route("pages.login"))->withInput($request->only("phone"));
     }
 
 
@@ -138,9 +155,15 @@ class PagesController extends Controller
     }
 
 
-    public function logout(){
+    public function logout(Request $request){
         Auth::logout();
-        session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect(route("pages.login"));
+    }
+
+    private function loginRateLimitKey(Request $request): string
+    {
+        return 'login|' . Str::lower(trim((string) $request->input('phone'))) . '|' . $request->ip();
     }
 }

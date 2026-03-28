@@ -19,11 +19,6 @@ class CheckSystemMaintenance
             return $next($request);
         }
 
-        // Allow Livewire transport endpoints so admin toggles still persist.
-        if ($request->is("livewire/*")) {
-            return $next($request);
-        }
-
         // Let admin area and login flow pass so maintenance can be managed.
         if (
             str_starts_with($routeName, "root.") ||

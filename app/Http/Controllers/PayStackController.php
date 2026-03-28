@@ -17,7 +17,7 @@ class PayStackController extends Controller
     public function initPayment(Request $request){
         $request->validate([
             "amount" => "required|numeric|gt:0",
-            "type" => "required"
+            "type" => "required|in:credit"
         ]);
 
 
@@ -86,19 +86,26 @@ class PayStackController extends Controller
 
 
     public function handlePaymentCallback(Request $request){
-
-
         $reference = $request->query('reference');
 
         if (!$reference) {
             Log::channel("paystack")->warning("Paystack callback missing reference query param");
             CustomHelper::message("danger", "An error occurred while trying to process your payment. Please try again.");
-            return redirect()->route("agent.dashboard");
+            return redirect()->route("pages.login");
         }
 
-        $existing = Transaction::query()->where("code", $reference)->first();
-        $useLive = $existing && $existing->paystack_live_mode !== null
-            ? (bool) $existing->paystack_live_mode
+        $transaction = Transaction::query()->where("code", $reference)->first();
+
+        if (!$transaction) {
+            Log::channel("paystack")->warning("Paystack callback unknown reference", [
+                "reference" => $reference,
+            ]);
+            CustomHelper::message("danger", "Transaction reference not found in our system.");
+            return $this->paymentRedirectFor(null);
+        }
+
+        $useLive = $transaction->paystack_live_mode !== null
+            ? (bool) $transaction->paystack_live_mode
             : (bool) Setting::query()->value("use_live_payment");
         $sk = PaystackCredentials::secretForMode($useLive);
         $response = Http::withHeaders([
@@ -118,52 +125,34 @@ class PayStackController extends Controller
         ]);
 
         if ($response->successful() && is_array($paymentDetails) && ($paymentDetails["data"]["status"] ?? null) === "success") {
-            // TODO: Save transaction details in the database
+            $credited = $this->finalizeSuccessfulPayment($transaction);
+            $amount = (float) $transaction->amount;
 
-            $transaction = Transaction::where("code", $reference)->get();
+            CustomHelper::message("success", $credited
+                ? "Payment of {$amount} was successful"
+                : "This transaction has already been processed and credited."
+            );
 
-            if (count($transaction) == 1){
-                $transaction = $transaction->first();
-                if (($paymentDetails["data"]["status"] ?? null) == "success") {
-                        TopUp::create([
-                            "code" => $reference,
-                            "customer_id" => auth()->id(),
-                            "amount" => $transaction->amount,
-                            "payment_made" => true,
-                            "status" => "completed"
-                        ]);
+            Log::channel("paystack")->info("Paystack callback verification completed", [
+                "reference" => $reference,
+                "customer_id" => $transaction->customer_id,
+                "amount" => $amount,
+                "credited" => $credited,
+            ]);
 
-
-                        auth()->user()->balance += $transaction->amount;
-                        auth()->user()->save();
-
-                        $actualBalance = $transaction->amount;
-
-                        $transaction->status = "completed";
-                        $transaction->save();
-
-                        CustomHelper::message("success", "Payment of {$actualBalance} was successful");
-                        Log::channel("paystack")->info("Paystack callback wallet credited", [
-                            "reference" => $reference,
-                            "user_id" => auth()->id(),
-                            "amount" => (float) $actualBalance,
-                        ]);
-
-                        return redirect()->route("agent.dashboard");
-                }
-                return redirect()->route("agent.dashboard");
-            }
-            elseif (($paymentDetails["data"]["status"] ?? null) == "failed") {
-                CustomHelper::message("danger", $paymentDetails["data"]["gateway_response"] ?? "");
-                return redirect()->route("agent.dashboard");
-            }
-            elseif (($paymentDetails["data"]["status"] ?? null) == "pending") {
-                CustomHelper::message("info", $paymentDetails["data"]["gateway_response"] ?? "");
-                return redirect()->route("agent.dashboard");
-            }
+            return $this->paymentRedirectFor($transaction);
         }
 
-        return redirect()->route("agent.dashboard");
+        $status = is_array($paymentDetails) ? ($paymentDetails["data"]["status"] ?? null) : null;
+        if ($status === "failed") {
+            CustomHelper::message("danger", $paymentDetails["data"]["gateway_response"] ?? "Transaction failed.");
+        } elseif ($status === "pending") {
+            CustomHelper::message("info", $paymentDetails["data"]["gateway_response"] ?? "Transaction is still pending.");
+        } else {
+            CustomHelper::message("danger", "Could not verify the transaction at this time.");
+        }
+
+        return $this->paymentRedirectFor($transaction);
     }
 
     public function verifyPayment(Request $request)
@@ -202,12 +191,6 @@ class PayStackController extends Controller
                 return redirect()->route('agent.dashboard');
             }
 
-            // Prevent re-processing a completed transaction
-            if ($transaction->status === 'completed') {
-                CustomHelper::message('info', 'This transaction has already been processed and credited.');
-                return redirect()->route('agent.dashboard');
-            }
-
             $useLive = $transaction->paystack_live_mode !== null
                 ? (bool) $transaction->paystack_live_mode
                 : (bool) Setting::query()->value("use_live_payment");
@@ -237,35 +220,19 @@ class PayStackController extends Controller
             // Handle logic based on the transaction status
             switch ($status) {
                 case 'success':
-                    // Use a database transaction to ensure data integrity
-                    DB::transaction(function () use ($transaction, $paymentDetails) {
-                        // Create the TopUp record
-                        TopUp::create([
-                            "code" => $transaction->code,
-                            'user_id' => $transaction->user_id, // Use ID from transaction record
-                            'amount' => $transaction->amount,
-                            'payment_made' => true,
-                            'status' => 'completed',
-                            'customer_id' => $transaction->customer_id,
-                        ]);
+                    $credited = $this->finalizeSuccessfulPayment($transaction);
 
-
-
-
-                        // Credit the user's balance
-                        $user = $transaction->customer; //
-                        $user->balance += $transaction->amount;
-                        $user->save();
-                        // Update the transaction status
-                        $transaction->status = 'completed';
-                        $transaction->save();
-                    });
-
-                    CustomHelper::message('success', "Payment of {$transaction->amount} was successful and your wallet has been credited.");
+                    CustomHelper::message(
+                        $credited ? 'success' : 'info',
+                        $credited
+                            ? "Payment of {$transaction->amount} was successful and your wallet has been credited."
+                            : 'This transaction has already been processed and credited.'
+                    );
                     Log::channel("paystack")->info("Paystack verify POST wallet credited", [
                         "reference" => $reference,
                         "customer_id" => $transaction->customer_id,
                         "amount" => (float) $transaction->amount,
+                        "credited" => $credited,
                     ]);
                     return redirect()->route('agent.dashboard');
 
@@ -311,5 +278,83 @@ class PayStackController extends Controller
             CustomHelper::message('danger', 'A system error occurred. Please contact support.');
             return redirect()->route('agent.dashboard');
         }
+    }
+
+    private function finalizeSuccessfulPayment(Transaction $transaction): bool
+    {
+        return DB::transaction(function () use ($transaction): bool {
+            $lockedTransaction = Transaction::query()
+                ->whereKey($transaction->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$lockedTransaction) {
+                return false;
+            }
+
+            if ($lockedTransaction->status === "completed") {
+                return false;
+            }
+
+            if ($lockedTransaction->type !== "credit") {
+                Log::channel("paystack")->warning("Rejected non-credit Paystack transaction during finalization", [
+                    "reference" => $lockedTransaction->code,
+                    "type" => $lockedTransaction->type,
+                ]);
+                return false;
+            }
+
+            $existingTopUp = TopUp::query()
+                ->where("code", $lockedTransaction->code)
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingTopUp && $existingTopUp->status === "completed") {
+                $lockedTransaction->status = "completed";
+                $lockedTransaction->save();
+                return false;
+            }
+
+            $user = $lockedTransaction->customer()
+                ->lockForUpdate()
+                ->first();
+
+            if (!$user) {
+                return false;
+            }
+
+            if ($existingTopUp) {
+                $existingTopUp->customer_id = $lockedTransaction->customer_id;
+                $existingTopUp->amount = $lockedTransaction->amount;
+                $existingTopUp->payment_made = true;
+                $existingTopUp->status = "completed";
+                $existingTopUp->save();
+            } else {
+                TopUp::query()->create([
+                    "code" => $lockedTransaction->code,
+                    "customer_id" => $lockedTransaction->customer_id,
+                    "amount" => $lockedTransaction->amount,
+                    "payment_made" => true,
+                    "status" => "completed",
+                ]);
+            }
+
+            $user->balance += $lockedTransaction->amount;
+            $user->save();
+
+            $lockedTransaction->status = "completed";
+            $lockedTransaction->save();
+
+            return true;
+        });
+    }
+
+    private function paymentRedirectFor(?Transaction $transaction)
+    {
+        if ($transaction && auth()->check() && (int) auth()->id() === (int) $transaction->customer_id) {
+            return redirect()->route("agent.dashboard");
+        }
+
+        return redirect()->route("pages.login");
     }
 }

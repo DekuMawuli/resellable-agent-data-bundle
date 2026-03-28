@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\TopUp;
 use App\Models\Setting;
-use App\Models\Transaction;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -108,21 +107,25 @@ class AgentController extends Controller
         if (!is_null(session()->get("ORDER_PAYMENT"))){
             $code = session()->get("TOPUP_ID");
             $item = TopUp::query()
-                ->firstWhere("id", $code);
+                ->where("id", $code)
+                ->where("customer_id", Auth::id())
+                ->where("status", "pending")
+                ->first();
+
+            if (!$item) {
+                session()->remove("ORDER_PAYMENT");
+                session()->remove("TOPUP_ID");
+                session()->remove("TOPUP_AMOUNT");
+                return redirect(route("agent.dashboard"));
+            }
 
             $item->payment_made = true;
-            $item->status = "completed";
             $item->save();
-            Transaction::create([
-                "customer_id" => Auth::user()->id,
-                "code" => (string) Str::uuid(),
-                "amount" => $item->amount,
-                "type" => "credit",
-                "status" => "completed",
-            ]);
              session()->remove("ORDER_PAYMENT");
              session()->remove("TOPUP_ID");
              session()->remove("TOPUP_AMOUNT");
+             session()->flash("at", "info");
+             session()->flash("am", "Payment notice submitted. Your wallet will be credited after admin review.");
              return redirect(route("agent.dashboard"));
         }else{
             return redirect(route("agent.dashboard"));

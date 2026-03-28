@@ -135,10 +135,13 @@
                                     <i data-lucide="user" class="font-size-16 me-2"></i>
                                     <span>My Account</span>
                                 </a>
-                                <a class="dropdown-item notify-item" href="{{ route('pages.logout') }}">
-                                    <i data-lucide="log-out" class="font-size-16 me-2"></i>
-                                    <span>Logout</span>
-                                </a>
+                                <form method="POST" action="{{ route('pages.logout') }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item notify-item border-0 bg-transparent w-100 text-start">
+                                        <i data-lucide="log-out" class="font-size-16 me-2"></i>
+                                        <span>Logout</span>
+                                    </button>
+                                </form>
                             </div>
                         </li>
                     </ul>

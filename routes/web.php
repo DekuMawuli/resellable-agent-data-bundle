@@ -31,7 +31,7 @@ Route::prefix("/pages")
     ->as("pages.")
     ->middleware("auth")
     ->group(function (){
-        Route::get("/logout", "logout")->name("logout");
+        Route::post("/logout", "logout")->name("logout");
         Route::get("/profile", "profile")->name("profile");
     });
 
@@ -45,17 +45,19 @@ Route::prefix("/root")
         Route::get("/products", "products")->name("products");
         Route::get("/orders", "orders")->name("orders");
         Route::post("/toggle-balance", "toggleBalanceView")->name("view-balance");
-        Route::get("/delete-order/{code}", "deleteOrder")->name("deleteOrder");
+        Route::delete("/delete-order/{code}", "deleteOrder")->name("deleteOrder");
         Route::get("/agents", "agents")->name("agents");
         Route::get("/agent-detail/{code}", "agentDetail")->name("agent_detail");
-        Route::get("/approve-deposit/{id}", "approveDeposit")->name("approveDeposit");
-        Route::get("/confirm-payment/{id}", "confirmPayment")->name("confirmPayment");
-        Route::get("/approve-purchase/{id}", "approvePurchase")->name("approvePurchase");
-        Route::get("/confirm-purchase/{id}", "confirmPurchase")->name("confirmPurchase");
+        Route::post("/approve-deposit/{id}", "approveDeposit")->name("approveDeposit");
+        Route::post("/confirm-payment/{id}", "confirmPayment")->name("confirmPayment");
+        Route::post("/approve-purchase/{id}", "approvePurchase")->name("approvePurchase");
+        Route::post("/confirm-purchase/{id}", "confirmPurchase")->name("confirmPurchase");
         Route::get("/settings", "settings")->name("settings");
         Route::get("/credentials", "credentials")->name("credentials");
     });
 
+Route::get("agent/ps/verify-payment", [PayStackController::class, "handlePaymentCallback"])
+    ->name("agent.handle-payment-callback");
 
 Route::prefix("/agent")
     ->controller(\App\Http\Controllers\AgentController::class)
@@ -67,9 +69,8 @@ Route::prefix("/agent")
         Route::get("/products", "products")->name("products");
 
         Route::post("/deposit", "deposit")->name("deposit");
-        Route::get("/confirm-payment", "confirmPayment")->name("confirmPayment");
+        Route::post("/confirm-payment", "confirmPayment")->name("confirmPayment");
         Route::post("ps/init-payment", [PayStackController::class, "initPayment"])->name("initPayment");
-        Route::get("ps/verify-payment", [PayStackController::class, "handlePaymentCallback"])->name("handle-payment-callback");
         Route::post("ps/confirm-payment", [PayStackController::class, "verifyPayment"])->name("confirm-payment");
 
     });

@@ -295,7 +295,10 @@
                 <div class="header-action d-flex align-items-center justify-content-end gap-3">
                   @auth
                     <a class="btn-primary slide-btn d-none d-lg-inline-block" href="{{ route('agent.dashboard') }}">My Dashboard</a>
-                    <a class="nav-link d-none d-lg-inline-block" href="{{ route('pages.logout') }}">Sign Out</a>
+                    <form method="POST" action="{{ route('pages.logout') }}" class="d-none d-lg-inline-block">
+                      @csrf
+                      <button type="submit" class="nav-link border-0 bg-transparent p-0">Sign Out</button>
+                    </form>
                   @else
                     <a class="nav-link d-none d-lg-inline-block" href="{{ route('pages.login') }}">Sign In</a>
                     <a class="nav-link d-none text-dark d-lg-inline-block" href="{{ route('pages.register') }}">Register</a>
@@ -359,7 +362,10 @@
                   <a class="nav-link" href="{{ route('agent.dashboard') }}">My Dashboard</a>
                 </li>
                 <li class="utilty-menu-item">
-                  <a class="nav-link" href="{{ route('pages.logout') }}">Sign Out</a>
+                  <form method="POST" action="{{ route('pages.logout') }}">
+                    @csrf
+                    <button type="submit" class="nav-link border-0 bg-transparent p-0">Sign Out</button>
+                  </form>
                 </li>
               @else
                 <li class="utilty-menu-item">

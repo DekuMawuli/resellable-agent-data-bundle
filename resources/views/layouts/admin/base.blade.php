@@ -59,7 +59,12 @@
                   </li>
                   <li> <a href="{{ route("pages.profile") }}"><i class="lnr lnr-cog"></i>Profile</a> </li>
                   <li class="logout">
-                    <a href="{{ route("pages.logout") }}"><i class="fa fa-power-off"></i>Logout</a>
+                    <form method="POST" action="{{ route("pages.logout") }}">
+                      @csrf
+                      <button type="submit" class="border-0 bg-transparent p-0 text-start w-100">
+                        <i class="fa fa-power-off"></i>Logout
+                      </button>
+                    </form>
                   </li>
                 </ul>
               </li>

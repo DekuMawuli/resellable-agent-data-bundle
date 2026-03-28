@@ -140,9 +140,15 @@
                                     <td><span class="badge bg-{{ $statusClass }}">{{ ucfirst($order->status) }}</span></td>
                                     <td>
                                         @if($order->status == 'pending')
-                                            <a href="{{ route('root.confirmPurchase', $order->id) }}" class="btn btn-sm btn-info">Confirm</a>
+                                            <form method="POST" action="{{ route('root.confirmPurchase', $order->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-info">Confirm</button>
+                                            </form>
                                         @elseif($order->status == 'processing' && blank($order->provider_reference))
-                                            <a href="{{ route('root.approvePurchase', $order->id) }}" class="btn btn-sm btn-success">Approve</a>
+                                            <form method="POST" action="{{ route('root.approvePurchase', $order->id) }}" class="d-inline">
+                                                @csrf
+                                                <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                            </form>
                                         @elseif($order->status == 'processing')
                                             <span class="text-muted">Forwarded</span>
                                         @else

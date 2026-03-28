@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
@@ -126,7 +127,11 @@ class AdminController extends Controller
     }
 
     public function deleteOrder($code){
-        $order = Order::firstWhere("orderCode", "=", $code);
+        $order = Order::firstWhere("code", "=", $code);
+        if (!$order) {
+            CustomHelper::message("warning", "Order not found.");
+            return redirect()->back();
+        }
         $order->delete();
         CustomHelper::message("warning",
         "Order Removed Successfully");
@@ -137,18 +142,51 @@ class AdminController extends Controller
     public function approveDeposit($id){
         $deposit = TopUp::query()
             ->where("id", "=", $id)
-            ->where("status", "=", "processing")
-            ->where("paymentMade", "=", "Y")
+            ->where("status", "=", "pending")
+            ->where("payment_made", "=", true)
             ->first();
         if (is_null($deposit)){
-            CustomHelper::message("warning", "Deposit cannot be done. First Approve Payment and Check whether agent has made payment");
+            CustomHelper::message("warning", "Deposit cannot be approved. Confirm that the agent has submitted payment.");
             return redirect(route("root.dashboard"));
         }
-        $deposit->status = "completed";
-        $deposit->save();
-        $agent = User::where("id", "=", $deposit->user_id)->first();
-        $agent->balance += $deposit->amount;
-        $agent->save();
+
+        DB::transaction(function () use ($deposit) {
+            $lockedDeposit = TopUp::query()
+                ->whereKey($deposit->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$lockedDeposit || $lockedDeposit->status === "completed") {
+                return;
+            }
+
+            $agent = User::query()
+                ->whereKey($lockedDeposit->customer_id)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$agent) {
+                return;
+            }
+
+            $lockedDeposit->status = "completed";
+            $lockedDeposit->save();
+
+            $agent->balance += $lockedDeposit->amount;
+            $agent->save();
+
+            \App\Models\Transaction::query()->firstOrCreate(
+                ["code" => $lockedDeposit->code],
+                [
+                    "customer_id" => $agent->id,
+                    "amount" => $lockedDeposit->amount,
+                    "type" => "credit",
+                    "status" => "completed",
+                    "description" => "Admin-approved deposit",
+                ]
+            );
+        });
+
         CustomHelper::message("success", "Deposit Approved");
         return redirect(route("root.dashboard"));
     }
@@ -156,15 +194,13 @@ class AdminController extends Controller
         $deposit = TopUp::query()
             ->where("id", "=", $id)
             ->where("status", "=", "pending")
-            ->where("paymentMade", "=", "Y")
+            ->where("payment_made", "=", true)
             ->first();
         if (is_null($deposit)){
-            CustomHelper::message("warning", "Payment is not completed by Agent");
+            CustomHelper::message("warning", "Payment has not been submitted by the agent.");
             return redirect(route("root.dashboard"));
         }
-        $deposit->status = "processing";
-        $deposit->save();
-        CustomHelper::message("success", "Deposit in process");
+        CustomHelper::message("info", "Payment submission confirmed. You can now approve the deposit.");
         return redirect(route("root.dashboard"));
     }
 
