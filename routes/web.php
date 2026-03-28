@@ -53,6 +53,7 @@ Route::prefix("/root")
         Route::get("/approve-purchase/{id}", "approvePurchase")->name("approvePurchase");
         Route::get("/confirm-purchase/{id}", "confirmPurchase")->name("confirmPurchase");
         Route::get("/settings", "settings")->name("settings");
+        Route::get("/credentials", "credentials")->name("credentials");
     });
 
 

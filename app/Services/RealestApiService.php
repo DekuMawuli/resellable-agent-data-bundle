@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Services\CredentialService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -78,16 +79,21 @@ class RealestApiService
 
     private function apiClient(): PendingRequest
     {
+        $apiKey  = CredentialService::get('realest_api_key', config('services.realest.api_key'));
+        $baseUrl = CredentialService::get('realest_base_url', config('services.realest.base_url'));
+
         return Http::acceptJson()
             ->asJson()
-            ->withToken((string) config("services.realest.api_key"))
-            ->baseUrl(rtrim((string) config("services.realest.base_url"), "/"));
+            ->withToken((string) $apiKey)
+            ->baseUrl(rtrim((string) $baseUrl, '/'));
     }
 
     private function isConfigured(): bool
     {
-        return filled(config("services.realest.base_url"))
-            && filled(config("services.realest.api_key"));
+        $apiKey  = CredentialService::get('realest_api_key', config('services.realest.api_key'));
+        $baseUrl = CredentialService::get('realest_base_url', config('services.realest.base_url'));
+
+        return filled($baseUrl) && filled($apiKey);
     }
 
     private function missingConfigurationResponse(): array

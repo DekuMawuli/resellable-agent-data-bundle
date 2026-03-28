@@ -229,7 +229,11 @@ class AdminController extends Controller
     public function settings()
     {
         return view("admin.settings");
+    }
 
+    public function credentials()
+    {
+        return view("admin.credentials");
     }
 
 }

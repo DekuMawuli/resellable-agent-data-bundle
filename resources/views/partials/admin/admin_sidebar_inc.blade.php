@@ -56,6 +56,13 @@
                     <span class="menu-text">Settings</span>
                 </a>
             </li>
+
+            <li class="menu-item {{ request()->routeIs('root.credentials') ? 'active' : '' }}">
+                <a class="menu-link waves-effect" href="{{ route('root.credentials') }}">
+                    <span class="menu-icon"><i class="fas fa-lock fa-fw" style="font-size:1rem;"></i></span>
+                    <span class="menu-text">API Credentials</span>
+                </a>
+            </li>
         </ul>
     </div>
 </div>

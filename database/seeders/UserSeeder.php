@@ -42,3 +42,7 @@ class UserSeeder extends Seeder
 
     }
 }
+
+
+
+// Evans Asante Manu	hievans68@gmail.com	0244790651
