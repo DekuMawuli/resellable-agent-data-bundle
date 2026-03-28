@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Order;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\Category;
 use App\Services\RealestApiService;
@@ -84,12 +85,31 @@ class OrdersComponent extends Component
             return;
         }
 
-        try {
-            if (filled($order->provider_reference)) {
-                CustomHelper::message("info", "Order has already been forwarded to the provider.");
-                return;
-            }
+        if (filled($order->provider_reference)) {
+            CustomHelper::message("info", "Order has already been forwarded to the provider.");
+            return;
+        }
 
+        $useLive = (bool) Setting::query()->value("use_live_payment");
+
+        // ── TEST MODE: approve locally, no external API call ──────────────────
+        if (!$useLive) {
+            $order->provider_reference = "TEST-" . strtoupper(substr(uniqid(), -8));
+            $order->provider_status    = "completed";
+            $order->status             = "completed";
+            $order->save();
+
+            Log::channel("realest")->info("Order approved locally in test mode (no API call made)", [
+                "order_code"         => $order->code,
+                "provider_reference" => $order->provider_reference,
+            ]);
+
+            CustomHelper::message("info", "Test mode — order #{$order->code} marked as completed locally. No request was sent to the provider.");
+            return;
+        }
+
+        // ── LIVE MODE: forward to Realest API ─────────────────────────────────
+        try {
             $response = app(RealestApiService::class)->purchaseBundle(
                 strtoupper($order->product->category->name),
                 $order->phone_number,
@@ -101,19 +121,19 @@ class OrdersComponent extends Component
                 return;
             }
 
-            $responseData = $response["data"] ?? [];
+            $responseData   = $response["data"] ?? [];
             $providerStatus = (string) ($responseData["order_status"] ?? "processing");
 
             $order->provider_reference = (string) ($responseData["reference_code"] ?? $order->provider_reference);
-            $order->provider_status = $providerStatus;
-            $order->status = $this->normalizeOrderStatus($providerStatus);
+            $order->provider_status    = $providerStatus;
+            $order->status             = $this->normalizeOrderStatus($providerStatus);
             $order->save();
 
-            CustomHelper::message("success", "Order forwarded successfully.");
+            CustomHelper::message("success", "Order #{$order->code} forwarded to provider successfully.");
         } catch (\Throwable $e) {
             Log::channel("realest")->error("Realest API exception during order approval", [
                 "order_code" => $order->code,
-                "message" => $e->getMessage(),
+                "message"    => $e->getMessage(),
             ]);
             CustomHelper::message("danger", "An unexpected error occurred while forwarding the order.");
         }

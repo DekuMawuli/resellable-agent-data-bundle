@@ -10,6 +10,7 @@ use App\Services\RealestApiService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
@@ -47,13 +48,40 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
 
+        // Fetch live balance from Realest API — cached for 5 min to avoid
+        // a real HTTP call on every page load / post-approval redirect.
+        $realestBalance      = null;
+        $realestBalanceError = null;
+
+        try {
+            $cached = Cache::remember('realest_account_balance', 300, function () {
+                return app(RealestApiService::class)->checkBalance();
+            });
+
+            if (($cached['status'] ?? '') === 'success') {
+                $realestBalance = $cached['data']['balance'] ?? null;
+            } else {
+                // Don't cache error responses — bust so the next load retries
+                Cache::forget('realest_account_balance');
+                $realestBalanceError = $cached['message'] ?? 'Could not fetch balance.';
+            }
+        } catch (\Throwable $e) {
+            Cache::forget('realest_account_balance');
+            Log::channel('realest')->error('Failed to fetch Realest balance on admin dashboard', [
+                'message' => $e->getMessage(),
+            ]);
+            $realestBalanceError = 'API error — check credentials.';
+        }
+
         $ctx = [
-            "activeAgents" => $agents,
-            "todaySales" => $todaySales,
-            "balance" => $setting->account_balance,
-            "deposits" => $deposits,
-            "totalDeposits" => $totalDeposit,
-            "setting" => $setting,
+            "activeAgents"        => $agents,
+            "todaySales"          => $todaySales,
+            "balance"             => $setting->account_balance,
+            "realestBalance"      => $realestBalance,
+            "realestBalanceError" => $realestBalanceError,
+            "deposits"            => $deposits,
+            "totalDeposits"       => $totalDeposit,
+            "setting"             => $setting,
         ];
         return view("admin.dashboard", $ctx);
     }

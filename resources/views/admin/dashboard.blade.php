@@ -49,16 +49,36 @@
             <div class="col-sm-6 col-xl-3">
                 <div class="card h-100">
                     <div class="card-body">
-                        <h6 class="text-uppercase font-size-12 text-muted mb-3">Account Balance</h6>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="h3 mb-0 text-success">
-                                @if (is_numeric($balance))
-                                    GHS {{ number_format((float) $balance, 2) }}
-                                @else
-                                    {{ $balance }}
-                                @endif
+                        <h6 class="text-uppercase font-size-12 text-muted mb-3">
+                            Realest Balance
+                            <span class="ms-1" style="font-size:.6rem;font-weight:700;letter-spacing:.05em;
+                                text-transform:uppercase;border-radius:9999px;padding:.1rem .45rem;
+                                background:{{ $realestBalance !== null ? '#dcfce7' : '#fee2e2' }};
+                                color:{{ $realestBalance !== null ? '#15803d' : '#b91c1c' }};">
+                                {{ $realestBalance !== null ? 'Live' : 'Unavailable' }}
                             </span>
-                            <i class="fas fa-wallet font-size-24 text-success" aria-hidden="true"></i>
+                        </h6>
+                        <div class="d-flex align-items-center justify-content-between">
+                            @if ($realestBalance !== null)
+                                <span class="h3 mb-0 text-success">
+                                    GHS {{ number_format((float) $realestBalance, 2) }}
+                                </span>
+                                <i class="fas fa-wallet font-size-24 text-success" aria-hidden="true"></i>
+                            @elseif ($realestBalanceError)
+                                <div class="min-w-0">
+                                    <span class="h5 mb-0 text-danger">—</span>
+                                    <p class="text-muted mb-0 mt-1" style="font-size:.72rem;line-height:1.3;">
+                                        {{ $realestBalanceError }}
+                                    </p>
+                                    <a href="{{ route('root.credentials') }}" style="font-size:.72rem;">
+                                        Configure credentials
+                                    </a>
+                                </div>
+                                <i class="fas fa-plug font-size-24 text-danger" aria-hidden="true"></i>
+                            @else
+                                <span class="h3 mb-0 text-muted">—</span>
+                                <i class="fas fa-wallet font-size-24 text-muted" aria-hidden="true"></i>
+                            @endif
                         </div>
                     </div>
                 </div>
