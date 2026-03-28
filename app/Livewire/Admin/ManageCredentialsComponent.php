@@ -108,7 +108,7 @@ class ManageCredentialsComponent extends Component
         $this->showSaveModal = true;
     }
 
-    public function confirmSave(): void
+    public function confirmSave()
     {
         if (!$this->isUnlocked()) {
             $this->lock();
