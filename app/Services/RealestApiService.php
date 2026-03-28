@@ -11,6 +11,47 @@ use Illuminate\Support\Str;
 
 class RealestApiService
 {
+    /**
+     * GET /check-balance
+     * Returns the authenticated account's current balance.
+     */
+    public function checkBalance(): array
+    {
+        if (!$this->isConfigured()) {
+            Log::channel("realest")->warning("Realest API check-balance skipped: credentials not configured");
+            return $this->missingConfigurationResponse();
+        }
+
+        $response = $this->apiClient()->get("/check-balance");
+
+        $this->logRealestExchange("check_balance", "GET /check-balance", $response);
+
+        return $this->formatResponse($response);
+    }
+
+    /**
+     * GET /products
+     * Returns all active networks and their in-stock products.
+     * Each product has `name` (use as `size` in purchase) and `agent_price`.
+     */
+    public function getProducts(): array
+    {
+        if (!$this->isConfigured()) {
+            Log::channel("realest")->warning("Realest API products skipped: credentials not configured");
+            return $this->missingConfigurationResponse();
+        }
+
+        $response = $this->apiClient()->get("/products");
+
+        $this->logRealestExchange("products", "GET /products", $response);
+
+        return $this->formatResponse($response);
+    }
+
+    /**
+     * POST /purchase
+     * Places a data bundle order deducted from the account balance.
+     */
     public function purchaseBundle(string $network, string $recipient, string $size): array
     {
         if (!$this->isConfigured()) {

@@ -3,11 +3,14 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Product;
+use App\Services\RealestApiService;
 use Livewire\Component;
 use App\Models\Category;
 use Illuminate\Support\Str;
 use App\Http\Customs\CustomHelper;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProductComponent extends Component
 {
@@ -24,7 +27,11 @@ class ProductComponent extends Component
 
     public $selectedProduct = null;
 
-    // public Product $newProduct;
+    /** Products fetched from the Realest catalog for the selected network */
+    public array $catalogProducts = [];
+
+    /** 'idle' | 'loaded' | 'empty' | 'error' | 'unconfigured' */
+    public string $catalogStatus = 'idle';
 
     protected $rules = [
         "retailPrice" => "required|numeric",
@@ -67,6 +74,71 @@ class ProductComponent extends Component
     public function clearSelection(){
         $this->initVars();
         $this->updateMode = false;
+    }
+
+    /**
+     * Fires when the admin changes the network/category select.
+     * Fetches (or hits cache for) the full Realest product catalog,
+     * then filters it down to the chosen network.
+     */
+    public function updatedCategoryId(): void
+    {
+        $this->catalogProducts = [];
+        $this->catalogStatus   = 'idle';
+
+        if (!$this->categoryId) {
+            return;
+        }
+
+        $category = Category::find($this->categoryId);
+        if (!$category) {
+            return;
+        }
+
+        try {
+            // Cache the full catalog for 1 hour — one real HTTP call per hour at most.
+            $catalog = Cache::remember('realest_catalog', 3600, function () {
+                return app(RealestApiService::class)->getProducts();
+            });
+
+            if (($catalog['status'] ?? '') !== 'success') {
+                // Bust cache so a stale error response doesn't persist
+                Cache::forget('realest_catalog');
+                $this->catalogStatus = isset($catalog['message']) && str_contains(strtolower($catalog['message']), 'not configured')
+                    ? 'unconfigured'
+                    : 'error';
+                return;
+            }
+
+            $networks = $catalog['data']['networks'] ?? [];
+
+            // Match by network name case-insensitively
+            $matched = collect($networks)
+                ->first(fn ($n) => strtolower($n['network'] ?? '') === strtolower($category->name));
+
+            if (!$matched || empty($matched['products'])) {
+                $this->catalogStatus = 'empty';
+                return;
+            }
+
+            $this->catalogProducts = $matched['products'];
+            $this->catalogStatus   = 'loaded';
+
+        } catch (\Throwable $e) {
+            Log::channel('realest')->error('Catalog fetch failed in ProductComponent', [
+                'message' => $e->getMessage(),
+            ]);
+            Cache::forget('realest_catalog');
+            $this->catalogStatus = 'error';
+        }
+    }
+
+    /**
+     * Pre-fills the bundle size field from a catalog item the admin clicked.
+     */
+    public function fillFromCatalog(string $name): void
+    {
+        $this->name = $name;
     }
 
 
@@ -130,12 +202,13 @@ class ProductComponent extends Component
     }
     private function initVars()
     {
-        $this->updateMode = false;
-        $this->retailPrice = "";
-        $this->name = "";
-        $this->categoryId = "";
-        $this->outOfStock = false;
-
+        $this->updateMode      = false;
+        $this->retailPrice     = "";
+        $this->name            = "";
+        $this->categoryId      = "";
+        $this->outOfStock      = false;
+        $this->catalogProducts = [];
+        $this->catalogStatus   = 'idle';
     }
 
     public function mount()

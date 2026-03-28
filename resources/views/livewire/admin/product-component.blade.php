@@ -1,22 +1,117 @@
 <div class="row g-3 crud-shell">
+
+@push('styles')
+<style>
+/* ── Catalog panel ──────────────────────────────────────────────────────── */
+.catalog-panel {
+    border: 1px solid #e0e7ff;
+    border-radius: .5rem;
+    overflow: hidden;
+    margin-top: .75rem;
+    background: #fafbff;
+}
+.catalog-panel__head {
+    background: #eef2ff;
+    border-bottom: 1px solid #e0e7ff;
+    padding: .45rem .7rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .4rem;
+}
+.catalog-panel__title {
+    font-size: .68rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: #4338ca;
+}
+.catalog-panel__hint {
+    font-size: .63rem;
+    color: #818cf8;
+}
+.catalog-panel__body {
+    padding: .35rem .5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    max-height: 240px;
+    overflow-y: auto;
+}
+.catalog-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .35rem .5rem;
+    border-radius: .35rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background .12s, border-color .12s;
+}
+.catalog-item:hover { background: #e0e7ff; border-color: #c7d2fe; }
+.catalog-item.is-selected { background: #e0e7ff; border-color: #6366f1; }
+.catalog-item__size {
+    font-weight: 700;
+    font-size: .82rem;
+    color: #1e1b4b;
+    white-space: nowrap;
+}
+.catalog-item__cost {
+    font-size: .75rem;
+    color: #6366f1;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.catalog-item__use {
+    font-size: .63rem;
+    color: #a5b4fc;
+    border: 1px solid #c7d2fe;
+    border-radius: 9999px;
+    padding: .1rem .45rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.catalog-item:hover .catalog-item__use {
+    color: #4338ca;
+    border-color: #6366f1;
+}
+.catalog-panel__status {
+    padding: .6rem .7rem;
+    font-size: .76rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+.catalog-panel__status--empty   { color: #9ca3af; }
+.catalog-panel__status--error   { color: #dc2626; }
+.catalog-panel__status--loading { color: #6366f1; }
+.catalog-cost-note {
+    font-size: .65rem;
+    color: #6366f1;
+    background: #eef2ff;
+    border-radius: 0 0 .5rem .5rem;
+    padding: .3rem .7rem;
+    border-top: 1px dashed #c7d2fe;
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+}
+</style>
+@endpush
+
     <div class="col-12">
         @include("partials.alerts_inc")
     </div>
     <div class="col-12 col-md-3">
         <div class="card crud-card crud-scroll">
           <div class="card-body">
-              <h4 class="card-title">Add Products</h4>
+              <h4 class="card-title">{{ $updateMode ? 'Edit Product' : 'Add Product' }}</h4>
                 <form wire:submit.prevent="saveProduct">
-                  <div class="form-group">
-                      <label for="">Bundle Size</label>
-                      <input type="number" wire:model.blur="name" class="form-control">
-                      @error("name")
-                          <small class="text-danger d-block mt-1">{{ $message }}</small>
-                      @enderror
-                  </div>
+
                   <div class="form-group">
                       <label for="">Network</label>
-                      <select class="form-control" wire:model.lazy="categoryId">
+                      <select class="form-control" wire:model.live="categoryId">
                           <option value="">Select Network</option>
                           @foreach($allCategories as $category)
                               <option value="{{ $category->id }}">{{ $category->name }}</option>
@@ -25,10 +120,75 @@
                       @error("categoryId")
                           <small class="text-danger d-block mt-1">{{ $message }}</small>
                       @enderror
+
+                      {{-- ── Realest catalog reference panel ─────────────── --}}
+                      @if ($categoryId)
+                          <div class="catalog-panel mt-2">
+                              <div class="catalog-panel__head">
+                                  <span class="catalog-panel__title">
+                                      <i class="fas fa-satellite-dish me-1"></i>Realest Catalog
+                                  </span>
+                                  <span class="catalog-panel__hint">tap a row to use</span>
+                              </div>
+
+                              {{-- Loading state while Livewire round-trip completes --}}
+                              <div wire:loading wire:target="categoryId" class="catalog-panel__status catalog-panel__status--loading">
+                                  <span class="spinner-border spinner-border-sm"></span> Fetching…
+                              </div>
+
+                              <div wire:loading.remove wire:target="categoryId">
+                                  @if ($catalogStatus === 'loaded' && count($catalogProducts))
+                                      <div class="catalog-panel__body">
+                                          @foreach ($catalogProducts as $item)
+                                              <div
+                                                  class="catalog-item {{ (string)$name === (string)$item['name'] ? 'is-selected' : '' }}"
+                                                  wire:click="fillFromCatalog('{{ $item['name'] }}')"
+                                              >
+                                                  <span class="catalog-item__size">{{ $item['name'] }} GB</span>
+                                                  <span class="catalog-item__cost">GHS {{ number_format((float)$item['agent_price'], 2) }}</span>
+                                                  <span class="catalog-item__use">use</span>
+                                              </div>
+                                          @endforeach
+                                      </div>
+                                      <div class="catalog-cost-note">
+                                          <i class="fas fa-info-circle"></i>
+                                          Prices shown are your cost. Set your retail price above these.
+                                      </div>
+
+                                  @elseif ($catalogStatus === 'empty')
+                                      <div class="catalog-panel__status catalog-panel__status--empty">
+                                          <i class="fas fa-inbox"></i> No products found for this network in the catalog.
+                                      </div>
+
+                                  @elseif ($catalogStatus === 'unconfigured')
+                                      <div class="catalog-panel__status catalog-panel__status--error">
+                                          <i class="fas fa-key"></i> Realest API key not configured.
+                                      </div>
+
+                                  @elseif ($catalogStatus === 'error')
+                                      <div class="catalog-panel__status catalog-panel__status--error">
+                                          <i class="fas fa-exclamation-triangle"></i> Could not load catalog. Check API credentials.
+                                      </div>
+                                  @endif
+                              </div>
+                          </div>
+                      @endif
+                      {{-- ── end catalog panel ────────────────────────────── --}}
                   </div>
+
                   <div class="form-group">
-                      <label for="">Price</label>
-                      <input type="number" step="0.1" wire:model.blur="retailPrice" class="form-control">
+                      <label for="">Bundle Size (GB)</label>
+                      <input type="number" wire:model.blur="name" class="form-control"
+                          placeholder="{{ $catalogStatus === 'loaded' ? 'Or type manually' : 'e.g. 7' }}">
+                      @error("name")
+                          <small class="text-danger d-block mt-1">{{ $message }}</small>
+                      @enderror
+                  </div>
+
+                  <div class="form-group">
+                      <label for="">Your Retail Price</label>
+                      <input type="number" step="0.01" wire:model.blur="retailPrice" class="form-control"
+                          placeholder="Set price for agents">
                       @error("retailPrice")
                           <small class="text-danger d-block mt-1">{{ $message }}</small>
                       @enderror
@@ -44,6 +204,7 @@
                           <small class="text-danger d-block mt-1">{{ $message }}</small>
                       @enderror
                   </div>
+
                   <div class="form-group">
                       @if($updateMode)
                           <button type="submit" class="btn btn-info btn-block">Update</button>
@@ -57,6 +218,7 @@
           </div>
       </div>
     </div>
+
     <div class="col-12 col-md-9">
         <div class="card crud-card crud-scroll">
             <div class="card-body">
