@@ -5,9 +5,11 @@ namespace App\Livewire\Admin;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Category;
+use App\Services\RealestApiService;
 use App\Http\Customs\CustomHelper;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\Log;
 
 class OrdersComponent extends Component
 {
@@ -71,6 +73,7 @@ class OrdersComponent extends Component
     public function approvePurchase(int $id): void
     {
         $order = Order::query()
+            ->with(["product", "product.category"])
             ->where("id", $id)
             ->where("payment_made", true)
             ->where("status", "processing")
@@ -81,10 +84,36 @@ class OrdersComponent extends Component
             return;
         }
 
-        $order->status = "completed";
-        $order->save();
+        try {
+            if (filled($order->provider_reference)) {
+                CustomHelper::message("info", "Order has already been forwarded to the provider.");
+                return;
+            }
 
-        CustomHelper::message("success", "Order approved successfully.");
+            $response = app(RealestApiService::class)->purchaseBundle(
+                strtoupper($order->product->category->name),
+                $order->phone_number,
+                $order->product->name
+            );
+
+            if (($response["status"] ?? "error") !== "success") {
+                CustomHelper::message("warning", $response["message"] ?? "Purchase failed at the provider.");
+                return;
+            }
+
+            $responseData = $response["data"] ?? [];
+            $providerStatus = (string) ($responseData["order_status"] ?? "processing");
+
+            $order->provider_reference = (string) ($responseData["reference_code"] ?? $order->provider_reference);
+            $order->provider_status = $providerStatus;
+            $order->status = $this->normalizeOrderStatus($providerStatus);
+            $order->save();
+
+            CustomHelper::message("success", "Order forwarded successfully.");
+        } catch (\Throwable $e) {
+            Log::error("Realest API Exception during order approval for Order #{$order->code}: " . $e->getMessage());
+            CustomHelper::message("danger", "An unexpected error occurred while forwarding the order.");
+        }
     }
 
     public function render()
@@ -152,5 +181,17 @@ class OrdersComponent extends Component
                 ->orderBy("name")
                 ->get(["id", "name"]),
         ]);
+    }
+
+    private function normalizeOrderStatus(string $status): string
+    {
+        $normalized = strtolower(trim($status));
+
+        return match ($normalized) {
+            "success", "completed" => "completed",
+            "pending", "processing", "queued", "ongoing" => "processing",
+            "failed", "error", "cancelled", "reversed" => "failed",
+            default => $normalized ?: "processing",
+        };
     }
 }

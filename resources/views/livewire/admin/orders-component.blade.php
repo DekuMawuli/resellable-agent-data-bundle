@@ -114,7 +114,7 @@
                       >
                         Confirm
                       </button>
-                    @elseif($displayStatus === "processing")
+                    @elseif($displayStatus === "processing" && blank($order->provider_reference))
                       <button
                         type="button"
                         class="btn btn-success btn-sm"
@@ -124,6 +124,8 @@
                       >
                         Approve
                       </button>
+                    @elseif($displayStatus === "processing")
+                      <span class="text-muted">Forwarded</span>
                     @endif
                   </div>
                 </td>

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Helper\UnimarketAPI;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\TopUp;
@@ -10,10 +9,12 @@ use App\Models\Product;
 use App\Models\Setting;
 use App\Models\SmsTracker;
 use App\Models\Transaction;
+use App\Services\RealestApiService;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AdminController extends Controller
 {
@@ -45,10 +46,10 @@ class AdminController extends Controller
             ]
         );
 
-        $response = UnimarketAPI::getWalletBalance();
+        $response = app(RealestApiService::class)->checkBalance();
 
         if ($response['status'] != 'success'){
-            CustomHelper::message("danger", "Could not fetch balance from Unimarket");
+            CustomHelper::message("danger", $response["message"] ?? "Could not fetch balance from Realest API");
             $balance = "N/A";
         }else{
             $responseData = $response['data'];
@@ -157,17 +158,51 @@ class AdminController extends Controller
 
     public function approvePurchase($id){
         $order = Order::query()
+            ->with(["product", "product.category"])
             ->where("id", "=", $id)
-            ->where("paymentMade", "=", "Y")
+            ->where("payment_made", "=", true)
             ->where("status", "=", "processing")
             ->first();
         if (is_null($order)){
             CustomHelper::message("warning", "Order cannot be done. First Approve Payment and Check whether agent has made payment");
             return redirect(route("root.dashboard"));
         }
-        $order->status = "completed";
-        $order->save();
-        CustomHelper::message("success", "Order Approved");
+
+        if (filled($order->provider_reference)) {
+            CustomHelper::message("info", "Order has already been forwarded to the provider.");
+            return redirect(route("root.dashboard"));
+        }
+
+        try {
+            $response = app(RealestApiService::class)->purchaseBundle(
+                strtoupper($order->product->category->name),
+                $order->phone_number,
+                $order->product->name
+            );
+
+            if (($response["status"] ?? "error") !== "success") {
+                CustomHelper::message("warning", $response["message"] ?? "Purchase failed at the provider.");
+                return redirect(route("root.dashboard"));
+            }
+
+            $responseData = $response["data"] ?? [];
+
+            $order->provider_reference = (string) ($responseData["reference_code"] ?? $order->provider_reference);
+            $order->provider_status = (string) ($responseData["order_status"] ?? "processing");
+            $order->status = match (strtolower(trim($order->provider_status))) {
+                "success", "completed" => "completed",
+                "pending", "processing", "queued", "ongoing" => "processing",
+                "failed", "error", "cancelled", "reversed" => "failed",
+                default => "processing",
+            };
+            $order->save();
+
+            CustomHelper::message("success", "Order forwarded successfully.");
+        } catch (\Throwable $e) {
+            Log::error("Realest API Exception during admin controller approval for Order #{$order->code}: " . $e->getMessage());
+            CustomHelper::message("danger", "An unexpected error occurred while forwarding the order.");
+        }
+
         return redirect(route("root.dashboard"));
     }
     public function confirmPurchase($id){

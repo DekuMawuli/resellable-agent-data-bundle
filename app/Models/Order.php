@@ -18,8 +18,10 @@ class Order extends Model
      */
     protected $fillable = [
         'code',
+        'provider_reference',
         'payment_made',
         'status',
+        'provider_status',
         'customer_id',
         'product_id',
         'total_amount',

@@ -55,6 +55,10 @@ return [
         "key" => env("OTHER_API_KEY"),
         "base_url" => env("OTHER_BASE_URL")
     ],
+    "realest" => [
+        "api_key" => env("REALEST_API_KEY"),
+        "base_url" => env("REALEST_BASE_URL"),
+    ],
 
 
 ];

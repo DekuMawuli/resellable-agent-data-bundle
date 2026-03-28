@@ -23,8 +23,10 @@
                         <div class="action-group">
                             @if($order->status == "pending")
                                 <button wire:click="confirmPurchase('{{$order->code}}')" class="btn btn-info btn-sm">Confirm Payment</button>
-                            @elseif($order->status == "processing")
+                            @elseif($order->status == "processing" && blank($order->provider_reference))
                                 <button wire:click="approvePurchase('{{$order->code}}')" class="btn btn-success btn-sm">Forward Order</button>
+                            @elseif($order->status == "processing")
+                                <span class="badge badge-primary">Forwarded</span>
                             @else
                                 <span class="badge badge-success">Completed</span>
                             @endif

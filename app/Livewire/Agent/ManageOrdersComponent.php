@@ -4,7 +4,7 @@ namespace App\Livewire\Agent;
 
 use App\Models\Order;
 use Livewire\Component;
-use App\Helper\OtherAPI;
+use App\Services\RealestApiService;
 use App\Http\Customs\CustomHelper;
 
 class ManageOrdersComponent extends Component
@@ -22,15 +22,21 @@ class ManageOrdersComponent extends Component
             return;
         }
 
-        try{
-            $response = OtherAPI::checkOrderStatus($code);
+        if (blank($order->provider_reference)) {
+            CustomHelper::message("warning", "Order has not been forwarded to the provider yet.");
+            return;
+        }
 
-            if (!is_array($response) || !($response["success"] ?? false)){
-                CustomHelper::message("danger", "Could not fetch order status from provider.");
+        try{
+            $response = app(RealestApiService::class)->getOrderStatus($order->provider_reference);
+
+            if (($response["status"] ?? "error") !== "success"){
+                CustomHelper::message("danger", $response["message"] ?? "Could not fetch order status from provider.");
                 return;
             }
 
-            $status = $this->normalizeOrderStatus((string) ($response['data']['status'] ?? "processing"));
+            $status = $this->normalizeOrderStatus((string) ($response['data']['order_status'] ?? "processing"));
+            $order->provider_status = (string) ($response['data']['order_status'] ?? "processing");
             $order->status = $status;
             $order->save();
 

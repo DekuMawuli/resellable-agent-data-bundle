@@ -3,15 +3,13 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Order;
-use App\Models\Setting;
 use Livewire\Component;
-use App\Helper\UnimarketAPI;
 use App\Exports\OrdersExport;
+use App\Services\RealestApiService;
 use App\Http\Customs\CustomHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use GuzzleHttp\Exception\RequestException;
 
 class AdminDashboardOrdersComponent extends Component
 {
@@ -35,56 +33,46 @@ class AdminDashboardOrdersComponent extends Component
         return Excel::download(new OrdersExport, "orders.xlsx");
     }
 
-public function approvePurchase($id)
+    public function approvePurchase($id)
     {
-        // Use firstOrFail for a cleaner query. It will 404 if the order is not found.
         $order = Order::query()
             ->with(["product", "product.category"])
             ->where("code", "=", $id)
             ->where("payment_made", "=", true)
             ->where("status", "=", "processing")
-            ->firstOrFail(); // If not found, it stops here with a 404 page.
+            ->firstOrFail();
 
         try {
-            // Call the external API
-            $response = UnimarketAPI::purchaseBundle(
+            if (filled($order->provider_reference)) {
+                CustomHelper::message("info", "Order has already been forwarded to the provider.");
+                return redirect()->back();
+            }
+
+            $response = app(RealestApiService::class)->purchaseBundle(
                 strtoupper($order->product->category->name),
                 $order->phone_number,
                 $order->product->name
             );
 
-            // Check for a business logic failure from the API
-            if ($response['status'] != 'success') {
+            if (($response['status'] ?? 'error') !== 'success') {
                 $errorMessage = $response['message'] ?? 'Purchase failed at the provider.';
                 CustomHelper::message("warning", $errorMessage);
                 return redirect()->back();
             }
 
-            // Use a transaction to safely update the order details
             DB::transaction(function () use ($order, $response) {
-                $responseData = $response['data'];
+                $responseData = $response['data'] ?? [];
+                $providerStatus = (string) ($responseData['order_status'] ?? 'processing');
 
-                // ** CRITICAL FIX: Store reference in the NEW field, DO NOT overwrite the order code **
-                $order->code = $responseData['reference'];
-
-                // NOTE: This assumes instant completion. The correct way is to create a separate
-                // process to check the status using the reference code, but for simplicity,
-                // we will stick to your original logic of marking it as completed.
-                $order->status = "completed";
+                $order->provider_reference = (string) ($responseData['reference_code'] ?? $order->provider_reference);
+                $order->provider_status = $providerStatus;
+                $order->status = $this->normalizeOrderStatus($providerStatus);
                 $order->save();
             });
 
-            // If the transaction succeeds, redirect with a success message
-            CustomHelper::message("success", "Order #" . $order->code . " was approved and processed successfully.");
-
-        } catch (RequestException $e) {
-            // This runs if the Unimarket API is down or returns an error
-            Log::error("Unimarket API Exception during manual approval for Order #{$order->code}: " . $e->getMessage());
-            CustomHelper::message("danger", "The provider's service is temporarily unavailable. The order was not processed. Please try again later.");
-            return redirect()->back();
+            CustomHelper::message("success", "Order #" . $order->code . " was forwarded successfully.");
         } catch (\Throwable $e) {
-            // This catches any other unexpected errors (e.g., database issues)
-            Log::error("General Exception during manual approval for Order #{$order->code}: " . $e->getMessage());
+            Log::error("Realest API Exception during manual approval for Order #{$order->code}: " . $e->getMessage());
             CustomHelper::message("danger", "An unexpected error occurred. Please contact support.");
             return redirect()->back();
         }
@@ -98,5 +86,17 @@ public function approvePurchase($id)
             ->latest()
             ->paginate(15)
         ]);
+    }
+
+    private function normalizeOrderStatus(string $status): string
+    {
+        $normalized = strtolower(trim($status));
+
+        return match ($normalized) {
+            "success", "completed" => "completed",
+            "pending", "processing", "queued", "ongoing" => "processing",
+            "failed", "error", "cancelled", "reversed" => "failed",
+            default => $normalized ?: "processing",
+        };
     }
 }

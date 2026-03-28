@@ -39,7 +39,7 @@
           }
 
           .hero-brand-badge img {
-            height: 20px;
+            height: 20px;`
             width: auto;
           }
 
