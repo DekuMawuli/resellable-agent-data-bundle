@@ -6,7 +6,6 @@ namespace App\Livewire\Admin;
 use App\Http\Customs\CustomHelper;
 use App\Models\Setting;
 use Livewire\Component;
-use App\Models\SmsTracker;
 
 class ManageSettingsComponent extends Component
 {
@@ -16,7 +15,7 @@ class ManageSettingsComponent extends Component
     public $contact_number = "";
     public bool $maintenance_mode = false;
     public string $maintenance_message = "We are undergoing maintenance. Please check back shortly.";
-
+    public bool $use_live_payment = false;
 
     protected $rules = [
         'whatsapp_link' => 'nullable|url',
@@ -24,6 +23,7 @@ class ManageSettingsComponent extends Component
         'contact_number' => 'required|string',
         'maintenance_mode' => 'boolean',
         'maintenance_message' => 'nullable|string|max:255',
+        'use_live_payment' => 'boolean',
     ];
 
 
@@ -38,20 +38,22 @@ class ManageSettingsComponent extends Component
                 'contact_number' => $this->contact_number,
                 'maintenance_mode' => $this->maintenance_mode,
                 'maintenance_message' => $this->maintenance_message,
+                'use_live_payment' => $this->use_live_payment,
             ]);
-        }else {
+        } else {
             $settings->update([
                 'whatsapp_link' => $this->whatsapp_link,
                 'whatsapp_number' => $this->whatsapp_number,
                 'contact_number' => $this->contact_number,
                 'maintenance_mode' => $this->maintenance_mode,
                 'maintenance_message' => $this->maintenance_message,
+                'use_live_payment' => $this->use_live_payment,
             ]);
         }
 
-        CustomHelper::message("success", "Contact Information updated successfully.");
+        CustomHelper::message("success", "Settings updated successfully.");
 
-
+        return $this->redirect(route("root.settings"), navigate: false);
     }
 
     public function render()
@@ -63,14 +65,14 @@ class ManageSettingsComponent extends Component
             $this->contact_number = $setting->contact_number;
             $this->maintenance_mode = (bool) $setting->maintenance_mode;
             $this->maintenance_message = (string) ($setting->maintenance_message ?: "We are undergoing maintenance. Please check back shortly.");
-
-
+            $this->use_live_payment = (bool) ($setting->use_live_payment ?? false);
         } else {
             $this->whatsapp_link = "";
             $this->whatsapp_number = "";
             $this->contact_number = "";
             $this->maintenance_mode = false;
             $this->maintenance_message = "We are undergoing maintenance. Please check back shortly.";
+            $this->use_live_payment = false;
         }
         return view('livewire.admin.manage-settings-component', [
             'whatsapp_link' => $this->whatsapp_link,
@@ -78,6 +80,7 @@ class ManageSettingsComponent extends Component
             'contact_number' => $this->contact_number,
             'maintenance_mode' => $this->maintenance_mode,
             'maintenance_message' => $this->maintenance_message,
+            'use_live_payment' => $this->use_live_payment,
         ]);
     }
 }

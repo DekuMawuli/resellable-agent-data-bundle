@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\TopUp;
 use App\Models\Transaction;
-use Illuminate\Support\Str;
+use App\Models\Setting;
+use App\Support\PaystackCredentials;
 use Illuminate\Http\Request;
 use App\Http\Customs\CustomHelper;
 use Illuminate\Support\Facades\DB;
@@ -20,9 +21,8 @@ class PayStackController extends Controller
         ]);
 
 
-        // dd($request->amount);
-
-        $sk = config("services.paystack.secret");
+        $useLive = (bool) Setting::query()->value("use_live_payment");
+        $sk = PaystackCredentials::secretForMode($useLive);
         // dd("Bearer $sk");
         $amount = $request->amount * 100;
         $extra_charges = $amount * 0.02;
@@ -61,18 +61,15 @@ class PayStackController extends Controller
                     "amount" => $amount,
                     "type" => "{$request->type}",
                     "status" => "pending",
-
+                    "paystack_live_mode" => $useLive,
                 ]);
                 return redirect()->to($data["data"]["authorization_url"]);
             }
         }
 
-        $data = $response->json();
-
-
-
-
-        CustomHelper::message("danger", $response["message"]);
+        $json = $response->json();
+        $msg = is_array($json) ? ($json["message"] ?? "Payment initialization failed.") : "Payment initialization failed.";
+        CustomHelper::message("danger", is_string($msg) ? $msg : "Payment initialization failed.");
         return back();
     }
 
@@ -84,12 +81,15 @@ class PayStackController extends Controller
         $reference = $request->query('reference');
 
         if (!$reference) {
-CustomHelper::message("danger", "An error occurred while trying to process your payment. Please try again.");
+            CustomHelper::message("danger", "An error occurred while trying to process your payment. Please try again.");
             return redirect()->route("agent.dashboard");
         }
 
-        // Call Paystack's verify API
-        $sk = config("services.paystack.secret");
+        $existing = Transaction::query()->where("code", $reference)->first();
+        $useLive = $existing && $existing->paystack_live_mode !== null
+            ? (bool) $existing->paystack_live_mode
+            : (bool) Setting::query()->value("use_live_payment");
+        $sk = PaystackCredentials::secretForMode($useLive);
         $response = Http::withHeaders([
             'Authorization' => "Bearer $sk",
             'Cache-Control' => 'no-cache',
@@ -136,23 +136,16 @@ CustomHelper::message("danger", "An error occurred while trying to process your 
                 CustomHelper::message("danger", $paymentDetails["data"]["gateway_response"]);
                 return redirect()->route("agent.dashboard");
             }
-            elseif ($paymentDetails['data']['status'] == 'pending'){{
+            elseif ($paymentDetails['data']['status'] == 'pending') {
                 CustomHelper::message("info", $paymentDetails["data"]["gateway_response"]);
                 return redirect()->route("agent.dashboard");
             }
-
-
-
-
-
-
         }
+
+        return redirect()->route("agent.dashboard");
     }
 
-
-}
-
-public function verifyPayment(Request $request)
+    public function verifyPayment(Request $request)
     {
         $request->validate([
             'reference' => 'required|string',
@@ -195,9 +188,11 @@ public function verifyPayment(Request $request)
                 return redirect()->route('agent.dashboard');
             }
 
-            // Call Paystack's verify API
-            $sk = config('services.paystack.secret');
-            $response = Http::withToken($sk) // A cleaner way to set the Bearer token
+            $useLive = $transaction->paystack_live_mode !== null
+                ? (bool) $transaction->paystack_live_mode
+                : (bool) Setting::query()->value("use_live_payment");
+            $sk = PaystackCredentials::secretForMode($useLive);
+            $response = Http::withToken($sk)
                 ->withHeaders(['Cache-Control' => 'no-cache'])
                 ->get("https://api.paystack.co/transaction/verify/{$reference}");
 
@@ -283,7 +278,6 @@ public function verifyPayment(Request $request)
                 'error' => $e->getMessage()
             ]);
 
-            dd($e->getMessage());
             CustomHelper::message('danger', 'A system error occurred. Please contact support.');
             return redirect()->route('agent.dashboard');
         }

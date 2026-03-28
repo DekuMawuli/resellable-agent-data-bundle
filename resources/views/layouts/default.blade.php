@@ -33,20 +33,46 @@
         @php
             $user = auth()->user();
             $showAgentSidebar = request()->routeIs("agent.*") || ($user && $user->role === "agent");
+            $showAdminPaystackBadge = $user && request()->routeIs("root.*");
+            $adminPaystackLive = $showAdminPaystackBadge
+                ? (bool) \App\Models\Setting::query()->value("use_live_payment")
+                : false;
         @endphp
         @include($showAgentSidebar ? "partials.agent.agent_sidebar_inc" : "partials.admin.admin_sidebar_inc")
 
 
         <div class="page-content">
             <div class="navbar-custom">
-                <div class="topbar">
-                    <div class="topbar-menu d-flex align-items-center gap-lg-2 gap-1">
-                        <button class="button-toggle-menu waves-effect waves-light rounded-circle">
+                <div class="topbar topbar-with-paystack-badge d-flex align-items-center position-relative">
+                    <div class="topbar-menu d-flex align-items-center gap-lg-2 gap-1 flex-shrink-0">
+                        <button type="button" class="button-toggle-menu waves-effect waves-light rounded-circle" aria-label="Toggle sidebar">
                             <i class="mdi mdi-menu"></i>
                         </button>
                     </div>
 
-                    <ul class="topbar-menu d-flex align-items-center gap-2">
+                    @if ($showAdminPaystackBadge)
+                        <div class="topbar-paystack-mode position-absolute top-50 start-50 translate-middle px-2 d-flex align-items-center gap-2 gap-sm-3 text-start">
+                            @if ($adminPaystackLive)
+                                <span class="badge paystack-mode-badge paystack-mode-badge--live rounded-pill px-2 px-sm-3 py-1 py-sm-2 fw-bold text-uppercase flex-shrink-0 align-self-center">
+                                    Live payments
+                                </span>
+                                <div class="topbar-paystack-mode__text d-flex flex-column justify-content-center gap-0 lh-sm min-w-0">
+                                    <span class="d-none d-md-block small text-white-50 text-nowrap">Real Paystack keys — real money.</span>
+                                    <a href="{{ route("root.settings") }}" class="topbar-paystack-mode__link small text-nowrap">Change in Settings</a>
+                                </div>
+                            @else
+                                <span class="badge paystack-mode-badge paystack-mode-badge--test rounded-pill px-2 px-sm-3 py-1 py-sm-2 fw-bold text-uppercase flex-shrink-0 align-self-center">
+                                    Test payments
+                                </span>
+                                <div class="topbar-paystack-mode__text d-flex flex-column justify-content-center gap-0 lh-sm min-w-0">
+                                    <span class="d-none d-md-block small text-white-50 text-nowrap">Test keys — no real charges.</span>
+                                    <a href="{{ route("root.settings") }}" class="topbar-paystack-mode__link small text-nowrap">Change in Settings</a>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <ul class="topbar-menu d-flex align-items-center gap-2 ms-auto flex-shrink-0">
                         <li class="d-none d-md-inline-block">
                             <a class="nav-link waves-effect waves-light" href="#" data-bs-toggle="fullscreen">
                                 <i class="mdi mdi-fullscreen font-size-24"></i>

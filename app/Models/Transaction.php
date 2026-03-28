@@ -22,7 +22,8 @@ class Transaction extends Model
         'description',
         'customer_id',
         'order_id',
-        "status"
+        "status",
+        "paystack_live_mode",
     ];
 
     /**
@@ -37,6 +38,7 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'customer_id' => 'integer',
             'order_id' => 'integer',
+            'paystack_live_mode' => 'boolean',
         ];
     }
 

@@ -17,6 +17,8 @@ return [
     'paystack' => [
         'secret' => env('PAYSTACK_SECRET_KEY'),
         'public' => env('PAYSTACK_PUBLIC_KEY'),
+        'test_secret' => env('PAYSTACK_TEST_SECRET_KEY'),
+        'test_public' => env('PAYSTACK_TEST_PUBLIC_KEY'),
     ],
     "tigo" =>[
         "key" => env("TIGO_KEY"),

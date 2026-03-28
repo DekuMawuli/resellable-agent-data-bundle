@@ -1,3 +1,58 @@
+/* Admin topbar — Paystack mode (test vs live), centered */
+.topbar-with-paystack-badge {
+    min-height: var(--bs-topbar-height, 70px);
+}
+
+.topbar-paystack-mode {
+    width: max-content;
+    max-width: min(100%, 520px);
+    z-index: 2;
+    pointer-events: none;
+}
+
+.topbar-paystack-mode__text {
+    text-align: left;
+}
+
+.topbar-paystack-mode a,
+.topbar-paystack-mode button {
+    pointer-events: auto;
+}
+
+.topbar-paystack-mode__link {
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+}
+
+.topbar-paystack-mode__link:hover {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.paystack-mode-badge {
+    letter-spacing: 0.06em;
+    border: 0;
+    font-size: 0.7rem;
+}
+
+@media (min-width: 576px) {
+    .paystack-mode-badge {
+        font-size: 0.8rem;
+    }
+}
+
+.paystack-mode-badge--live {
+    background: #b91c1c !important;
+    color: #fff !important;
+    box-shadow: 0 0 0 2px rgba(185, 28, 28, 0.35);
+}
+
+.paystack-mode-badge--test {
+    background: #eab308 !important;
+    color: #422006 !important;
+    box-shadow: 0 0 0 2px rgba(234, 179, 8, 0.5);
+}
+
 .app-content-shell {
     padding-bottom: 2rem;
 }

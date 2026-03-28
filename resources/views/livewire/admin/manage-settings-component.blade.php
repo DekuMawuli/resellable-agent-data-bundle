@@ -20,6 +20,19 @@
                     <input type="text" class="form-control" wire:model='whatsapp_link' placeholder="Whatsapp Link">
                 </div>
                 <div class="col-12 col-md-6">
+                    <label class="form-label d-block">Paystack environment</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" wire:model="use_live_payment" id="paystackLiveSwitch">
+                        <label class="form-check-label" for="paystackLiveSwitch">
+                            Use live Paystack keys
+                        </label>
+                    </div>
+                    <p class="text-muted small mb-0 mt-1">
+                        When off: <code>PAYSTACK_TEST_SECRET_KEY</code> / <code>PAYSTACK_TEST_PUBLIC_KEY</code>.
+                        When on: <code>PAYSTACK_SECRET_KEY</code> / <code>PAYSTACK_PUBLIC_KEY</code> (live).
+                    </p>
+                </div>
+                <div class="col-12 col-md-6">
                     <label class="form-label d-block">Maintenance Mode</label>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" wire:model="maintenance_mode" id="maintenanceModeSwitch">
