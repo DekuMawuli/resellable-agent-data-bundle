@@ -1,6 +1,7 @@
 <div class="card crud-card h-100">
   <div class="card-body">
     <h4 class="card-title">Recent Orders</h4>
+    @include("partials.alerts_inc")
     <div class="table-responsive">
       <table class="table table-striped table-hover align-middle mb-0">
         <thead>
