@@ -11,6 +11,11 @@ use Illuminate\Support\Str;
 
 class RealestApiService
 {
+    public function isReady(): bool
+    {
+        return $this->isConfigured();
+    }
+
     /**
      * GET /check-balance
      * Returns the authenticated account's current balance.

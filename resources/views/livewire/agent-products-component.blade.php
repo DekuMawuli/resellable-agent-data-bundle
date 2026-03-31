@@ -213,7 +213,12 @@
 
                     @if($wizardStep === "success")
                         <div class="shop-wizard-panel mb-3">
-                            <h6 class="text-success mb-1">Purchase submitted successfully</h6>
+                            <h6 class="mb-1 {{ $lastPurchaseTone === "warning" ? "text-warning" : "text-success" }}">
+                                {{ $lastPurchaseHeading ?: "Purchase submitted successfully" }}
+                            </h6>
+                            @if(!blank($lastPurchaseMessage))
+                                <p class="mb-2 text-muted">{{ $lastPurchaseMessage }}</p>
+                            @endif
                             @if(!blank($lastOrderReference))
                                 <p class="mb-0 text-muted">Reference: {{ $lastOrderReference }}</p>
                             @endif
