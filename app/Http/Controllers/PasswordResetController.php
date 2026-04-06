@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Customs\CustomHelper;
 use App\Models\User;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -108,9 +110,13 @@ class PasswordResetController extends Controller
             $validatedData,
             function (User $user, string $password): void {
                 $user->forceFill([
-                    'password' => Hash::make($password),
+                    'password' => $password,
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                $this->clearUserSessions($user);
+
+                event(new PasswordReset($user));
             }
         );
 
@@ -123,5 +129,22 @@ class PasswordResetController extends Controller
         CustomHelper::message('primary', 'Your password has been reset successfully. Please sign in with your new password.');
 
         return redirect()->route('pages.login');
+    }
+
+    private function clearUserSessions(User $user): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        $sessionTable = config('session.table', 'sessions');
+
+        if (! Schema::hasTable($sessionTable)) {
+            return;
+        }
+
+        DB::table($sessionTable)
+            ->where('user_id', $user->getKey())
+            ->delete();
     }
 }
