@@ -3,15 +3,16 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Models\TopUp;
-use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements CanResetPasswordContract
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use CanResetPassword, HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -20,10 +21,11 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'email',
         'phone',
         'balance',
         'role',
-        "code",
+        'code',
         'agent_status',
         'profileImage',
         'password',
@@ -49,20 +51,18 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-
     public function orders()
     {
-        return $this->hasMany(Order::class, "customer_id");
+        return $this->hasMany(Order::class, 'customer_id');
     }
 
     public function transactions()
     {
-        return $this->hasMany(Transaction::class, "customer_id");
+        return $this->hasMany(Transaction::class, 'customer_id');
     }
 
-    public function topUps(){
-        return $this->hasMany(TopUp::class, "customer_id");
+    public function topUps()
+    {
+        return $this->hasMany(TopUp::class, 'customer_id');
     }
-
-
 }
