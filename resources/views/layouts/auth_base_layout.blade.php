@@ -21,7 +21,7 @@
         };
         (function (d) {
             var wf = d.createElement('script'), s = d.scripts[0];
-            wf.src = 'js/webfont.js';
+            wf.src = '{{ asset('js/webfont.js') }}';
             wf.async = true;
             s.parentNode.insertBefore(wf, s);
         })(document);
@@ -45,15 +45,14 @@
 
 
 
-<script data-cfasync="false" src="../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
-<script src="vendor/jquery/jquery.min.js"></script>
-<script src="vendor/elevatezoom/jquery.elevatezoom.min.js"></script>
-<script src="vendor/imagesloaded/imagesloaded.pkgd.min.js"></script>
-<script src="vendor/magnific-popup/jquery.magnific-popup.min.js"></script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+<script src="{{ asset('vendor/elevatezoom/jquery.elevatezoom.min.js') }}"></script>
+<script src="{{ asset('vendor/imagesloaded/imagesloaded.pkgd.min.js') }}"></script>
+<script src="{{ asset('vendor/magnific-popup/jquery.magnific-popup.min.js') }}"></script>
 
-<script src="js/main.min.js"></script>
+<script src="{{ asset('js/main.min.js') }}"></script>
 </body>
 </html>
-
 
 
