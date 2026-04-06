@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Order;
+use App\Services\OrderStatusSyncService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Livewire\Component;
@@ -15,6 +16,8 @@ class AdminSalesChartComponent extends Component
 
     public function mount(): void
     {
+        app(OrderStatusSyncService::class)->syncPendingProviderOrders();
+
         $this->range = (int) $this->range;
         $this->range = in_array($this->range, $this->rangeOptions, true) ? $this->range : 3;
     }
@@ -27,13 +30,13 @@ class AdminSalesChartComponent extends Component
             $this->range = 3;
         }
 
-        $this->dispatch("admin-sales-chart-updated", chart: $this->buildChartPayload())->self();
+        $this->dispatch('admin-sales-chart-updated', chart: $this->buildChartPayload())->self();
     }
 
     public function render()
     {
-        return view("livewire.admin.admin-sales-chart-component", [
-            "chart" => $this->buildChartPayload(),
+        return view('livewire.admin.admin-sales-chart-component', [
+            'chart' => $this->buildChartPayload(),
         ]);
     }
 
@@ -43,13 +46,14 @@ class AdminSalesChartComponent extends Component
         $endDate = now()->endOfDay();
 
         $aggregates = Order::query()
-            ->selectRaw("DATE(created_at) as order_date, COALESCE(SUM(total_amount), 0) as total_amount, COUNT(*) as orders_count")
-            ->where("payment_made", true)
-            ->whereBetween("created_at", [$startDate, $endDate])
-            ->groupBy("order_date")
-            ->orderBy("order_date")
+            ->selectRaw('DATE(created_at) as order_date, COALESCE(SUM(total_amount), 0) as total_amount, COUNT(*) as orders_count')
+            ->where('payment_made', true)
+            ->whereIn('status', ['completed', 'success'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('order_date')
+            ->orderBy('order_date')
             ->get()
-            ->keyBy("order_date");
+            ->keyBy('order_date');
 
         $labels = [];
         $series = [];
@@ -57,14 +61,14 @@ class AdminSalesChartComponent extends Component
         $totalSales = 0.0;
         $totalOrders = 0;
 
-        foreach (CarbonPeriod::create($startDate, "1 day", $endDate) as $date) {
+        foreach (CarbonPeriod::create($startDate, '1 day', $endDate) as $date) {
             $day = $date->toDateString();
             $point = $aggregates->get($day);
 
             $daySales = (float) ($point->total_amount ?? 0);
             $dayOrders = (int) ($point->orders_count ?? 0);
 
-            $labels[] = Carbon::parse($day)->format("M j");
+            $labels[] = Carbon::parse($day)->format('M j');
             $series[] = round($daySales, 2);
             $ordersSeries[] = $dayOrders;
 
@@ -73,11 +77,11 @@ class AdminSalesChartComponent extends Component
         }
 
         return [
-            "labels" => $labels,
-            "series" => $series,
-            "ordersSeries" => $ordersSeries,
-            "totalSales" => round($totalSales, 2),
-            "totalOrders" => $totalOrders,
+            'labels' => $labels,
+            'series' => $series,
+            'ordersSeries' => $ordersSeries,
+            'totalSales' => round($totalSales, 2),
+            'totalOrders' => $totalOrders,
         ];
     }
 }
